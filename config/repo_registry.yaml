@@ -1,0 +1,59 @@
+# Repository Registry Configuration
+# Defines repositories available for the Context Orchestrator to route to.
+# Each repository has an id, description, github_url, local_path, and branch.
+
+repositories:
+  - id: sdlc-agent-framework
+    description: >
+      Self-hosted SDLC Agent Framework (Pilot Run). This is the framework itself,
+      used for testing the RPI workflow, structural navigation, and code execution
+      capabilities. Includes all advanced agent patterns from "No Vibes Allowed".
+    github_url: https://github.com/your-org/sdlc-agent-framework
+    local_path: .
+    branch: main
+    enable_code_execution: true
+  
+  - id: auth-service
+    description: >
+      Authentication microservice handling user login, registration, JWT token management,
+      OAuth 2.0 flows, MFA, password reset, and session management. Built with Python/FastAPI,
+      PostgreSQL, and Redis for session caching.
+    github_url: https://github.com/organization/auth-service
+    local_path: ./repos/auth-service
+    branch: main
+
+  - id: frontend-dashboard
+    description: >
+      Frontend dashboard application built with Next.js, React, and TypeScript. Provides
+      admin UI for user management, analytics visualization, settings configuration,
+      and real-time monitoring dashboards. Uses Tailwind CSS and ShadCN components.
+    github_url: https://github.com/organization/frontend-dashboard
+    local_path: ./repos/frontend-dashboard
+    branch: main
+
+  - id: sandbox
+    description: >
+      A temporary playground repository for testing agent capabilities and tool integration.
+      Safe environment for validating Context Orchestrator functionality without affecting
+      production repositories. Contains minimal test files for agent operations.
+    github_url: https://github.com/ruchithaab-byte/test-sandbox
+    local_path: ./repos/sandbox
+    branch: main
+
+  - id: new-agent-service
+    description: >
+      New agent service created via Backstage scaffolder. Java-based microservice
+      for agent orchestration and management. Built with Spring Boot framework.
+    github_url: https://github.com/ruchithaab-byte/new-agent-service
+    local_path: ./repos/new-agent-service
+    branch: main
+
+  - id: new-auth-bff
+    description: >
+      New authentication BFF (Backend for Frontend) service created via Backstage scaffolder.
+      Java-based service for handling authentication and authorization.
+    github_url: https://github.com/ruchithaab-byte/new-auth-bff
+    local_path: ./repos/new-auth-bff
+    branch: main
+    enable_code_execution: true
+

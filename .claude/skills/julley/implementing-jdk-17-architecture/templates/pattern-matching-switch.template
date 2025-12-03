@@ -1,0 +1,7 @@
+// Exhaustive switch on sealed type
+return switch (result) {
+    case Success s -> "Result: " + s.value();
+    case Failure f -> "Error: " + f.reason();
+    // Compiler enforces exhaustiveness - no default needed
+};
+

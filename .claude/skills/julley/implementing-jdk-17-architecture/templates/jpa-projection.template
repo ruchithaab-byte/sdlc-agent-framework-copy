@@ -1,0 +1,9 @@
+// JPA query projecting to Record (workaround for Records vs Entities)
+List<CustomerDTO> customers = entityManager.createQuery(
+    "SELECT c.id, c.name, c.email FROM Customer c", Object[].class
+)
+.setTupleTransformer((tuple, aliases) -> 
+    new CustomerDTO((Long) tuple[0], (String) tuple[1], (String) tuple[2])
+)
+.getResultList();
+

@@ -1,0 +1,79 @@
+{
+  "items": [
+    {
+      "apiVersion": "backstage.io/v1alpha1",
+      "kind": "Component",
+      "metadata": {
+        "name": "todo-frontend",
+        "description": "Todo application frontend built with Next.js",
+        "tags": [
+          "frontend",
+          "react",
+          "nextjs"
+        ]
+      },
+      "spec": {
+        "type": "service",
+        "lifecycle": "production",
+        "owner": "frontend-team",
+        "system": "todo-platform"
+      }
+    },
+    {
+      "apiVersion": "backstage.io/v1alpha1",
+      "kind": "Component",
+      "metadata": {
+        "name": "todo-api",
+        "description": "Todo application REST API",
+        "tags": [
+          "backend",
+          "api",
+          "spring-boot"
+        ]
+      },
+      "spec": {
+        "type": "service",
+        "lifecycle": "production",
+        "owner": "backend-team",
+        "system": "todo-platform",
+        "providesApis": [
+          "todo-api-v1"
+        ]
+      }
+    },
+    {
+      "apiVersion": "backstage.io/v1alpha1",
+      "kind": "Component",
+      "metadata": {
+        "name": "notification-service",
+        "description": "Notification service for email and SMS",
+        "tags": [
+          "backend",
+          "messaging",
+          "spring-boot"
+        ]
+      },
+      "spec": {
+        "type": "service",
+        "lifecycle": "production",
+        "owner": "platform-team",
+        "system": "shared-services"
+      }
+    },
+    {
+      "apiVersion": "backstage.io/v1alpha1",
+      "kind": "System",
+      "metadata": {
+        "name": "todo-platform",
+        "description": "Todo application platform"
+      },
+      "spec": {
+        "owner": "platform-team"
+      }
+    }
+  ],
+  "totalItems": 4,
+  "pageInfo": {
+    "hasNextPage": false
+  }
+}

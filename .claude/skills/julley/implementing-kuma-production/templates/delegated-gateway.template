@@ -1,0 +1,17 @@
+apiVersion: kuma.io/v1alpha1
+kind: Dataplane
+metadata:
+  name: kong-gateway
+  namespace: kong
+spec:
+  networking:
+    gateway:
+      type: DELEGATED
+    address: 10.0.0.1  # Replace with actual Pod IP
+    inbound:
+      - port: 8000
+        servicePort: 8000
+        tags:
+          kuma.io/service: kong-gateway
+          kuma.io/protocol: http
+

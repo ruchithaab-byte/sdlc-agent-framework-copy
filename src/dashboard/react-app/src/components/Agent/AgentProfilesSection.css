@@ -1,0 +1,190 @@
+.agents-section-card {
+  margin: 24px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.agent-count {
+  color: #666;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.agent-group {
+  margin-bottom: 32px;
+}
+
+.agent-group:last-child {
+  margin-bottom: 0;
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #262626;
+  transition: color 0.3s;
+}
+
+.group-subtitle {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 400;
+  color: #595959;
+  font-style: normal;
+  padding-left: 12px;
+  transition: color 0.3s;
+}
+
+/* Card view specific styles */
+.agent-profile-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.agent-profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-title-space {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-icon {
+  font-size: 18px;
+}
+
+.agent-name {
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 14px;
+}
+
+.budget-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.budget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.budget-header span:first-child {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.cost-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-top: 4px;
+}
+
+.capabilities-section {
+  margin-bottom: 8px;
+}
+
+.capability-tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.extra-tools-section {
+  margin-top: 8px;
+}
+
+/* Table view specific styles */
+.ant-table-wrapper {
+  margin-top: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .agents-section-card {
+    margin: 16px;
+  }
+
+  .group-title {
+    font-size: 16px;
+  }
+
+  .group-subtitle {
+    display: none;
+  }
+}
+
+/* Dark theme adjustments */
+:global(.dark) .agents-section-card {
+  background: var(--card-bg, #1e293b);
+  border-color: var(--border-color, #334155);
+}
+
+:global(.dark) .agent-count {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:global(.dark) .agents-section-card .ant-card-head-title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+:global(.dark) .agents-section-card .ant-card-head {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .group-title {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+:global(.dark) .group-subtitle {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+:global(.dark) .agent-profile-card {
+  background: var(--card-bg, #1e293b);
+  border-color: var(--border-color, #334155);
+}
+
+:global(.dark) .agent-profile-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .agent-name {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+:global(.dark) .budget-section {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .budget-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:global(.dark) .budget-header span:first-child {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+:global(.dark) .cost-details {
+  color: rgba(255, 255, 255, 0.75);
+}

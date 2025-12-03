@@ -1,0 +1,126 @@
+-- SQL Migration Examples Template
+-- Place files in: src/main/resources/db/migration/
+
+-- ============================================
+-- VERSIONED MIGRATION (V-script)
+-- ============================================
+-- Format: V[Version]__Description.sql
+-- Executes once, in order
+-- Use zero-padding: V001__, V010__, V100__
+
+-- Example: V001__init_schema.sql
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_username ON users(username);
+
+-- Example: V002__add_user_roles.sql
+CREATE TABLE user_roles (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_name VARCHAR(50) NOT NULL,
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, role_name)
+);
+
+-- Example: V005__add_audit_table.sql (with placeholder)
+CREATE TABLE audit_log (
+    id BIGSERIAL PRIMARY KEY,
+    action VARCHAR(50) NOT NULL,
+    entity_type VARCHAR(50),
+    entity_id BIGINT,
+    performed_by VARCHAR(100),
+    performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert initial data using placeholder
+INSERT INTO user_roles (user_id, role_name) 
+SELECT id, '${default_role}' FROM users WHERE id = 1;
+
+-- ============================================
+-- REPEATABLE MIGRATION (R-script)
+-- ============================================
+-- Format: R__Description.sql
+-- Executes every time file content changes (checksum-based)
+-- Use for views, stored procedures, triggers, grants
+
+-- Example: R__refresh_user_views.sql
+CREATE OR REPLACE VIEW active_users AS
+SELECT 
+    u.id,
+    u.username,
+    u.email,
+    COUNT(ur.role_name) as role_count
+FROM users u
+LEFT JOIN user_roles ur ON u.id = ur.user_id
+WHERE u.created_at > CURRENT_TIMESTAMP - INTERVAL '30 days'
+GROUP BY u.id, u.username, u.email;
+
+-- Example: R__grant_permissions.sql
+GRANT SELECT ON ALL TABLES IN SCHEMA ${schema_name} TO readonly_user;
+GRANT SELECT, INSERT, UPDATE ON users, user_roles TO app_user;
+
+-- ============================================
+-- SQL CALLBACK
+-- ============================================
+-- Event-based naming, placed in migration directory
+-- Executes automatically at specified lifecycle event
+
+-- Example: afterMigrate.sql (executes after all migrations complete)
+-- Grant permissions after schema changes
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON users, user_roles TO app_user;
+
+-- Log migration completion
+INSERT INTO migration_log (version, executed_at, status) 
+VALUES (
+    (SELECT version FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 1),
+    NOW(),
+    'SUCCESS'
+);
+
+-- Example: beforeMigrate.sql (executes before migration starts)
+-- Pre-migration validation or setup
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'flyway_schema_history') THEN
+        RAISE EXCEPTION 'Flyway schema history table not found';
+    END IF;
+END $$;
+
+-- ============================================
+-- BEST PRACTICES
+-- ============================================
+-- 1. Use zero-padding for version numbers (V001__, V010__, V100__)
+-- 2. Keep V-scripts immutable after execution
+-- 3. Use R-scripts for views, procedures, triggers, grants
+-- 4. Use placeholders for environment-specific values
+-- 5. Include rollback considerations in comments (for manual recovery)
+-- 6. Test migrations in isolated development databases
+
+-- ============================================
+-- COMMON PATTERNS
+-- ============================================
+
+-- Pattern: Add column with default (backward compatible)
+-- V010__add_status_column.sql
+ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'active' NOT NULL;
+
+-- Pattern: Create index concurrently (PostgreSQL, non-blocking)
+-- V011__add_index_concurrent.sql
+CREATE INDEX CONCURRENTLY idx_users_status ON users(status);
+
+-- Pattern: Data migration with transaction safety
+-- V012__migrate_user_data.sql
+BEGIN;
+    UPDATE users SET status = 'inactive' WHERE last_login < CURRENT_TIMESTAMP - INTERVAL '1 year';
+    INSERT INTO audit_log (action, entity_type) 
+    SELECT 'status_update', 'user' FROM users WHERE status = 'inactive';
+COMMIT;
+

@@ -1,0 +1,197 @@
+.output-viewer-card {
+  border-radius: 8px;
+}
+
+.output-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-item code {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.output-content {
+  max-height: 500px;
+  overflow: auto;
+}
+
+/* JSON Tree Viewer */
+.json-tree {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.json-toggle {
+  cursor: pointer;
+  user-select: none;
+  padding-right: 4px;
+  color: #888;
+  font-size: 10px;
+}
+
+.json-toggle:hover {
+  color: #1890ff;
+}
+
+.json-bracket {
+  color: #666;
+}
+
+.json-count {
+  color: #999;
+  font-size: 11px;
+  font-style: italic;
+  margin-left: 4px;
+}
+
+.json-key {
+  color: #a626a4;
+}
+
+.json-colon {
+  color: #666;
+}
+
+.json-comma {
+  color: #666;
+}
+
+.json-string {
+  color: #50a14f;
+  word-break: break-word;
+}
+
+.json-number {
+  color: #986801;
+}
+
+.json-boolean {
+  color: #0184bc;
+}
+
+.json-null {
+  color: #e45649;
+}
+
+.json-undefined {
+  color: #999;
+  font-style: italic;
+}
+
+.json-index {
+  color: #888;
+  margin-right: 4px;
+}
+
+.json-item {
+  padding: 2px 0;
+}
+
+.json-content {
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  padding-left: 8px;
+}
+
+/* Raw JSON */
+.json-raw {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0;
+  overflow: auto;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Outputs List */
+.outputs-list {
+  background: transparent;
+}
+
+.outputs-list .ant-collapse-item {
+  margin-bottom: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.outputs-list .ant-collapse-header {
+  font-size: 13px;
+}
+
+/* Dark theme */
+:global(.dark) .output-meta {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .meta-item code {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.dark) .json-bracket {
+  color: #abb2bf;
+}
+
+:global(.dark) .json-key {
+  color: #c678dd;
+}
+
+:global(.dark) .json-colon {
+  color: #abb2bf;
+}
+
+:global(.dark) .json-comma {
+  color: #abb2bf;
+}
+
+:global(.dark) .json-string {
+  color: #98c379;
+}
+
+:global(.dark) .json-number {
+  color: #d19a66;
+}
+
+:global(.dark) .json-boolean {
+  color: #56b6c2;
+}
+
+:global(.dark) .json-null {
+  color: #e06c75;
+}
+
+:global(.dark) .json-content {
+  border-left-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .json-raw {
+  background: rgba(255, 255, 255, 0.04);
+  color: #abb2bf;
+}
+
+:global(.dark) .json-toggle {
+  color: #5c6370;
+}
+
+:global(.dark) .json-toggle:hover {
+  color: #61afef;
+}
+

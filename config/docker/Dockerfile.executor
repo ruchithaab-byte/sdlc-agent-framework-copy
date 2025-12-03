@@ -1,0 +1,66 @@
+# SDLC Agent Executor Container
+# 
+# Secure, isolated execution environment for agent code execution.
+# Includes navigation tools (ctags, tree-sitter) per Gap 1 fix.
+#
+# Reference: "No Vibes Allowed" - Docker MCP Toolkit pattern
+
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    # Git for version control operations
+    git \
+    # Universal ctags for structural navigation (Gap 1)
+    universal-ctags \
+    # Build tools for tree-sitter
+    build-essential \
+    # Curl for HTTP operations
+    curl \
+    # Cleanup
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip to avoid hash verification issues
+RUN pip install --no-cache-dir --upgrade pip
+
+# Copy requirements.txt
+COPY requirements.txt /tmp/requirements.txt
+
+# Install framework dependencies
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Install additional tools for agent execution
+RUN pip install --no-cache-dir \
+    # Tree-sitter for code parsing (Gap 1)
+    tree-sitter \
+    tree-sitter-python \
+    tree-sitter-typescript \
+    tree-sitter-javascript \
+    tree-sitter-java \
+    tree-sitter-go \
+    # Testing framework
+    pytest \
+    # Data processing
+    pandas \
+    # Terminal UI
+    rich
+
+# Create non-root user for security
+RUN useradd -m -s /bin/bash executor
+
+# Create workspace directory
+WORKDIR /home/executor/workspace
+
+# Set ownership
+RUN chown executor:executor /home/executor/workspace
+
+# Switch to non-root user
+USER executor
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Default command
+CMD ["python3"]
+

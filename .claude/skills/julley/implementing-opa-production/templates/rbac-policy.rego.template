@@ -1,0 +1,30 @@
+package policy.rbac
+
+import rego.v1
+
+# Default Deny
+default allow := false
+
+# Input expectation:
+# {
+#   "roles": ["editor", "viewer"],
+#   "action": "write"
+# }
+#
+# Data expectation (data.roles_map):
+# {
+#   "permissions": {
+#     "editor": ["read", "write"],
+#     "viewer": ["read"]
+#   }
+# }
+
+# Main Allow Rule
+allow if {
+	# Iterate over user's roles
+	some user_role in input.roles
+	# Look up permissions for that role in external data
+	some allowed_action in data.roles_map.permissions[user_role]
+	# Check if the requested action is allowed
+	allowed_action == input.action
+}

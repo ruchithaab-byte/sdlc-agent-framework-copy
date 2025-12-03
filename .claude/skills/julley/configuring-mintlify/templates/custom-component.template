@@ -1,0 +1,15 @@
+import { useMemo, useCallback } from 'react';
+
+export function CustomComponent({ data }) {
+  const processed = useMemo(() => {
+    // Expensive operation
+    return expensiveComputation(data);
+  }, [data]);
+  
+  const handleClick = useCallback(() => {
+    // Event handler
+  }, []);
+  
+  return <div className="w-full">{processed}</div>;
+}
+

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Architecture Template for Microservice Projects
+  
+  Usage: Copy this template to your target project's .sdlc/memories/architecture_plan.xml
+  and fill in the placeholders marked with {{ variable_name }}.
+  
+  The ArchGuard agent will use this structure when designing architectures.
+-->
+<architecture_plan version="1.0" service="{{ project.name }}">
+  <metadata>
+    <created_at>{{ date }}</created_at>
+    <author>Architecture Team</author>
+    <description>{{ project.description }}</description>
+  </metadata>
+  
+  <service>{{ project.name }}</service>
+  
+  <components>
+    <!--
+      Define the main components of your microservice.
+      Types: API Gateway, Core Service, Supporting Service, Data Store, Cache, Message Queue
+    -->
+    <component>
+      <name>API Gateway</name>
+      <type>API Gateway</type>
+      <description>Entry point for all requests with rate limiting and request validation</description>
+      <technologies>
+        <!-- List technologies used -->
+      </technologies>
+      <responsibilities>
+        <responsibility>Request routing and load balancing</responsibility>
+        <responsibility>Rate limiting</responsibility>
+        <responsibility>Request/Response transformation</responsibility>
+        <responsibility>API versioning</responsibility>
+      </responsibilities>
+    </component>
+    
+    <component>
+      <name>{{ project.name }} Service</name>
+      <type>Core Service</type>
+      <description>Main service handling core business logic</description>
+      <technologies>
+        <!-- From project.tech_stack.backend -->
+      </technologies>
+      <responsibilities>
+        <responsibility><!-- Core responsibility 1 --></responsibility>
+        <responsibility><!-- Core responsibility 2 --></responsibility>
+      </responsibilities>
+    </component>
+  </components>
+  
+  <apis>
+    <!--
+      Define the APIs exposed by this service.
+      Types: REST, gRPC, GraphQL
+    -->
+    <api>
+      <name>Public API</name>
+      <type>REST</type>
+      <version>v1</version>
+      <base_path>/api/v1</base_path>
+      <endpoints>
+        <endpoint>
+          <method>GET</method>
+          <path>/health</path>
+          <description>Health check endpoint</description>
+        </endpoint>
+        <!-- Add more endpoints -->
+      </endpoints>
+    </api>
+    
+    <api>
+      <name>Internal API</name>
+      <type>gRPC</type>
+      <version>v1</version>
+      <services>
+        <!-- Define gRPC services for internal communication -->
+      </services>
+    </api>
+  </apis>
+  
+  <data_models>
+    <!--
+      Define the main data models/entities.
+    -->
+    <data_model>
+      <name><!-- Entity name --></name>
+      <type>Entity</type>
+      <attributes>
+        <attribute>
+          <name>id</name>
+          <type>UUID</type>
+          <required>true</required>
+        </attribute>
+        <attribute>
+          <name>created_at</name>
+          <type>Timestamp</type>
+          <required>true</required>
+        </attribute>
+        <attribute>
+          <name>updated_at</name>
+          <type>Timestamp</type>
+          <required>true</required>
+        </attribute>
+      </attributes>
+    </data_model>
+  </data_models>
+  
+  <security>
+    <authentication_methods>
+      <!-- List authentication methods -->
+      <method>JWT Bearer tokens</method>
+      <method>API Key for service-to-service</method>
+    </authentication_methods>
+    
+    <authorization>
+      <type>RBAC</type>
+      <description>Role-based access control</description>
+    </authorization>
+    
+    <encryption>
+      <at_rest>AES-256</at_rest>
+      <in_transit>TLS 1.3</in_transit>
+    </encryption>
+    
+    <rate_limiting>
+      <default>1000 requests per hour per user</default>
+    </rate_limiting>
+  </security>
+  
+  <deployment>
+    <architecture_style>Microservices</architecture_style>
+    <container_orchestration>Kubernetes</container_orchestration>
+    
+    <databases>
+      <primary>
+        <type><!-- PostgreSQL, MySQL, MongoDB, etc. --></type>
+        <version><!-- Version number --></version>
+        <replication>Master-replica with automatic failover</replication>
+        <backup>Daily with 30-day retention</backup>
+      </primary>
+      <cache>
+        <type>Redis</type>
+        <version>7+</version>
+        <usage>Session storage, Rate limiting, Caching</usage>
+      </cache>
+    </databases>
+    
+    <message_queue>
+      <type><!-- Kafka, RabbitMQ, AWS SQS --></type>
+      <usage>
+        <use>Async processing</use>
+        <use>Event-driven communication</use>
+      </usage>
+    </message_queue>
+    
+    <monitoring>
+      <metrics>Prometheus + Grafana</metrics>
+      <logging>ELK Stack or cloud-native logging</logging>
+      <tracing>OpenTelemetry with Jaeger</tracing>
+      <alerting>PagerDuty or Opsgenie</alerting>
+    </monitoring>
+    
+    <scaling>
+      <horizontal>Auto-scaling based on CPU/memory/custom metrics</horizontal>
+      <load_balancing>Round-robin with health checks</load_balancing>
+    </scaling>
+    
+    <ci_cd>
+      <pipeline>GitHub Actions / GitLab CI</pipeline>
+      <testing>Unit, Integration, E2E, Security scanning</testing>
+      <deployment_strategy>Blue-green or Canary</deployment_strategy>
+    </ci_cd>
+  </deployment>
+  
+  <adrs>
+    <!--
+      Architecture Decision Records - to be populated by ArchGuard agent
+    -->
+    <adr id="ADR-001">
+      <title><!-- Decision title --></title>
+      <status>Proposed</status>
+      <context><!-- Why this decision is needed --></context>
+      <decision><!-- What was decided --></decision>
+      <consequences><!-- What are the implications --></consequences>
+    </adr>
+  </adrs>
+</architecture_plan>
+

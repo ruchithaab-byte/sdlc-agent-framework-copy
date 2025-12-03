@@ -1,0 +1,13 @@
+apiVersion: kuma.io/v1alpha1
+kind: ZoneIngress
+metadata:
+  name: zone-ingress-us-east
+  labels:
+    kuma.io/zone: us-east
+spec:
+  networking:
+    address: 10.0.1.100  # External LoadBalancer IP
+    port: 10001
+    advertisedAddress: 10.0.1.100
+    advertisedPort: 10001
+

@@ -1,0 +1,8 @@
+apiVersion: kuma.io/v1alpha1
+kind: Zone
+metadata:
+  name: us-east
+spec:
+  ingress:
+    address: 10.0.1.100:10001
+

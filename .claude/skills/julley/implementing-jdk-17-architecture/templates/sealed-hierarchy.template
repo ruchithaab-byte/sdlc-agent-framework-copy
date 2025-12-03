@@ -1,0 +1,7 @@
+// Sealed interface defining finite set
+public sealed interface CalculationResult permits Success, Failure {}
+
+// Record implementations (implicitly final)
+public record Success(int value) implements CalculationResult {}
+public record Failure(String reason) implements CalculationResult {}
+

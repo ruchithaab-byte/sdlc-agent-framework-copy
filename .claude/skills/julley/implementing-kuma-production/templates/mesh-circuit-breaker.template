@@ -1,0 +1,31 @@
+apiVersion: kuma.io/v1alpha1
+kind: MeshCircuitBreaker
+metadata:
+  name: database-inbound-detection
+  namespace: db-ns
+  labels:
+    kuma.io/mesh: default
+spec:
+  targetRef:
+    kind: Dataplane
+    labels:
+      app: database
+  rules:
+    - default:
+        outlierDetection:
+          interval: 10s
+          baseEjectionTime: 60s
+          maxEjectionPercent: 30
+          splitExternalAndLocalErrors: true
+          detectors:
+            totalFailures:
+              consecutive: 5
+            gatewayFailures:
+              consecutive: 10
+            localOriginFailures:
+              consecutive: 10
+            successRate:
+              minimumHosts: 5
+              requestVolume: 10
+              standardDeviationFactor: 1.5
+

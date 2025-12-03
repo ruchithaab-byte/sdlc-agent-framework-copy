@@ -1,0 +1,48 @@
+_format_version: "3.0"
+
+# Best Practice: Use granular services and routes.
+# Anti-Pattern: Do not hardcode secrets here. Use environment variables (e.g. ${{env_var}}).
+
+services:
+  - name: hms-auth-bff
+    url: http://hms-auth-bff:8080
+    healthchecks:
+      active:
+        http_path: /actuator/health
+        healthy:
+          interval: 10
+          successes: 2
+        unhealthy:
+          interval: 5
+          http_failures: 3
+    routes:
+      - name: auth-routes
+        paths:
+          - /api/auth
+          - /api/webhooks
+        strip_path: false  # Best Practice: Preserve full path for microservices
+    plugins:
+      - name: cors
+        config:
+          origins: ["https://app.example.com"] # Restrict in production
+          methods: [GET, POST, PUT, DELETE, OPTIONS]
+          headers: [Accept, Content-Type, Authorization, X-Trace-Id]
+          exposed_headers: [X-Trace-Id]
+          credentials: true
+          max_age: 3600
+
+  - name: hms-onboarding-workflow
+    url: http://hms-onboarding-workflow:8080
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+          policy: local # Use 'redis' for distributed setups
+          limit_by: ip
+          fault_tolerant: true
+    routes:
+      - name: onboarding-routes
+        paths: [/api/v1/onboarding]
+        strip_path: false
+

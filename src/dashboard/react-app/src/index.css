@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #0f172a;
+  color: #f1f5f9;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light {
+  background: #ffffff;
+  color: #1e293b;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.app-container {
+  min-height: 100vh;
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  animation: fadeIn 0.6s ease-in-out;
+  padding-top: 24px;
+  transition: background-color 0.3s ease;
+}
+
+.app-container.light {
+  background: #ffffff;
+}
+
+/* Primary Navigation Tabs Styling */
+.primary-navigation-tabs .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+.primary-navigation-tabs .ant-tabs-tab {
+  padding: 12px 24px !important;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px 8px 0 0 !important;
+  transition: all 0.3s ease;
+}
+
+.primary-navigation-tabs .tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tab content animations */
+.ant-tabs-content-holder {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth transitions */
+.ant-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideUp 0.5s ease-out;
+}
+
+.ant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+}
+
+body.light .ant-card:hover {
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+}
+
+.ant-statistic, .ant-statistic-content, .ant-tag {
+  transition: all 0.3s ease;
+}
+
+.ant-table-row {
+  transition: all 0.2s ease;
+}
+
+.ant-table-row:hover {
+  transform: scale(1.002); /* Subtle scale */
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+body.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+body.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+body.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

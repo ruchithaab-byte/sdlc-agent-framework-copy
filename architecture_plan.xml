@@ -1,0 +1,342 @@
+<?xml version="1.0" ?>
+<authentication_service_architecture>
+  <service>authentication-service</service>
+  <timestamp>2025-11-28T12:41:09.651796</timestamp>
+  <metadata>
+    <created_by>Architecture Planner Skill</created_by>
+    <version>1.0</version>
+    <status>approved</status>
+    <prd_reference>./prd.xml</prd_reference>
+    <adr_reference>docs/adr/0001-authentication-microservice-architecture-design.md</adr_reference>
+  </metadata>
+  <components>
+    <item>
+      <name>Authentication Controller</name>
+      <purpose>Handle user login, logout, and token refresh operations</purpose>
+      <technology>Spring Boot REST Controller</technology>
+      <endpoints>
+        <item>/api/auth/login</item>
+        <item>/api/auth/logout</item>
+        <item>/api/auth/refresh</item>
+      </endpoints>
+    </item>
+    <item>
+      <name>User Management Service</name>
+      <purpose>Manage user registration, profile updates, and user lifecycle</purpose>
+      <technology>Spring Boot Service Layer</technology>
+      <dependencies>
+        <item>User Repository</item>
+        <item>Email Service</item>
+      </dependencies>
+    </item>
+    <item>
+      <name>Token Service</name>
+      <purpose>JWT token generation, validation, and management</purpose>
+      <technology>Spring Security JWT</technology>
+      <dependencies>
+        <item>Redis Cache</item>
+        <item>Key Management Service</item>
+      </dependencies>
+    </item>
+    <item>
+      <name>Authorization Service</name>
+      <purpose>Role-based access control and permission management</purpose>
+      <technology>Spring Security with custom authorization</technology>
+      <dependencies>
+        <item>Role Repository</item>
+        <item>Permission Repository</item>
+      </dependencies>
+    </item>
+    <item>
+      <name>OAuth Provider</name>
+      <purpose>OAuth 2.0/OpenID Connect support for third-party integration</purpose>
+      <technology>Spring Authorization Server</technology>
+      <dependencies>
+        <item>Client Repository</item>
+        <item>Token Service</item>
+      </dependencies>
+    </item>
+    <item>
+      <name>MFA Service</name>
+      <purpose>Multi-factor authentication with TOTP and SMS</purpose>
+      <technology>Custom service with external MFA providers</technology>
+      <dependencies>
+        <item>SMS Gateway</item>
+        <item>TOTP Library</item>
+      </dependencies>
+    </item>
+  </components>
+  <apis>
+    <item>
+      <endpoint>/api/auth/register</endpoint>
+      <method>POST</method>
+      <purpose>User registration with email verification</purpose>
+      <request_schema>UserRegistrationRequest</request_schema>
+      <response_schema>UserRegistrationResponse</response_schema>
+    </item>
+    <item>
+      <endpoint>/api/auth/login</endpoint>
+      <method>POST</method>
+      <purpose>User authentication and token generation</purpose>
+      <request_schema>LoginRequest</request_schema>
+      <response_schema>AuthenticationResponse</response_schema>
+    </item>
+    <item>
+      <endpoint>/api/auth/logout</endpoint>
+      <method>POST</method>
+      <purpose>Token invalidation and session cleanup</purpose>
+      <request_schema>LogoutRequest</request_schema>
+      <response_schema>LogoutResponse</response_schema>
+    </item>
+    <item>
+      <endpoint>/api/auth/refresh</endpoint>
+      <method>POST</method>
+      <purpose>JWT token refresh</purpose>
+      <request_schema>RefreshTokenRequest</request_schema>
+      <response_schema>AuthenticationResponse</response_schema>
+    </item>
+    <item>
+      <endpoint>/api/auth/validate</endpoint>
+      <method>GET</method>
+      <purpose>Token validation for service-to-service communication</purpose>
+      <request_schema>TokenValidationRequest</request_schema>
+      <response_schema>TokenValidationResponse</response_schema>
+    </item>
+    <item>
+      <endpoint>/api/oauth/authorize</endpoint>
+      <method>GET</method>
+      <purpose>OAuth 2.0 authorization endpoint</purpose>
+      <request_schema>OAuthAuthorizationRequest</request_schema>
+      <response_schema>OAuthAuthorizationResponse</response_schema>
+    </item>
+    <item>
+      <endpoint>/api/oauth/token</endpoint>
+      <method>POST</method>
+      <purpose>OAuth 2.0 token endpoint</purpose>
+      <request_schema>OAuthTokenRequest</request_schema>
+      <response_schema>OAuthTokenResponse</response_schema>
+    </item>
+  </apis>
+  <data_models>
+    <item>
+      <name>User</name>
+      <attributes>
+        <item>id</item>
+        <item>email</item>
+        <item>password_hash</item>
+        <item>first_name</item>
+        <item>last_name</item>
+        <item>is_verified</item>
+        <item>created_at</item>
+        <item>updated_at</item>
+        <item>last_login</item>
+      </attributes>
+      <relationships>
+        <item>roles</item>
+        <item>mfa_settings</item>
+      </relationships>
+    </item>
+    <item>
+      <name>Role</name>
+      <attributes>
+        <item>id</item>
+        <item>name</item>
+        <item>description</item>
+        <item>created_at</item>
+      </attributes>
+      <relationships>
+        <item>permissions</item>
+        <item>users</item>
+      </relationships>
+    </item>
+    <item>
+      <name>Permission</name>
+      <attributes>
+        <item>id</item>
+        <item>resource</item>
+        <item>action</item>
+        <item>description</item>
+      </attributes>
+      <relationships>
+        <item>roles</item>
+      </relationships>
+    </item>
+    <item>
+      <name>OAuth_Client</name>
+      <attributes>
+        <item>client_id</item>
+        <item>client_secret</item>
+        <item>name</item>
+        <item>redirect_uris</item>
+        <item>scopes</item>
+        <item>grant_types</item>
+      </attributes>
+      <relationships/>
+    </item>
+    <item>
+      <name>Refresh_Token</name>
+      <attributes>
+        <item>id</item>
+        <item>token_hash</item>
+        <item>user_id</item>
+        <item>expires_at</item>
+        <item>is_revoked</item>
+      </attributes>
+      <relationships>
+        <item>user</item>
+      </relationships>
+    </item>
+    <item>
+      <name>MFA_Setting</name>
+      <attributes>
+        <item>id</item>
+        <item>user_id</item>
+        <item>type</item>
+        <item>secret_key</item>
+        <item>backup_codes</item>
+        <item>is_enabled</item>
+      </attributes>
+      <relationships>
+        <item>user</item>
+      </relationships>
+    </item>
+  </data_models>
+  <security>
+    <encryption>
+      <at_rest>AES-256 encryption for sensitive data in database</at_rest>
+      <in_transit>TLS 1.3 for all API communications</in_transit>
+      <key_management>AWS KMS or HashiCorp Vault for key rotation</key_management>
+    </encryption>
+    <authentication_methods>
+      <item>Password + Email</item>
+      <item>OAuth 2.0</item>
+      <item>OpenID Connect</item>
+      <item>MFA (TOTP/SMS)</item>
+    </authentication_methods>
+    <token_strategy>
+      <type>JWT</type>
+      <algorithm>RS256</algorithm>
+      <access_token_ttl>15 minutes</access_token_ttl>
+      <refresh_token_ttl>7 days</refresh_token_ttl>
+      <key_rotation>Monthly</key_rotation>
+    </token_strategy>
+    <rate_limiting>
+      <login_attempts>5 per minute per IP</login_attempts>
+      <api_requests>1000 per minute per client</api_requests>
+    </rate_limiting>
+    <audit_logging>
+      <events>
+        <item>login</item>
+        <item>logout</item>
+        <item>token_refresh</item>
+        <item>password_change</item>
+        <item>permission_change</item>
+      </events>
+      <retention>2 years</retention>
+      <format>JSON structured logs</format>
+    </audit_logging>
+  </security>
+  <deployment>
+    <containerization>Docker with multi-stage builds</containerization>
+    <orchestration>Kubernetes with Helm charts</orchestration>
+    <scaling>
+      <horizontal_pod_autoscaler>CPU and memory based</horizontal_pod_autoscaler>
+      <min_replicas>3</min_replicas>
+      <max_replicas>20</max_replicas>
+      <target_cpu_utilization>70%</target_cpu_utilization>
+    </scaling>
+    <health_checks>
+      <liveness_probe>/health/live</liveness_probe>
+      <readiness_probe>/health/ready</readiness_probe>
+      <startup_probe>/health/startup</startup_probe>
+    </health_checks>
+    <resource_requirements>
+      <cpu_request>100m</cpu_request>
+      <cpu_limit>500m</cpu_limit>
+      <memory_request>256Mi</memory_request>
+      <memory_limit>1Gi</memory_limit>
+    </resource_requirements>
+  </deployment>
+  <infrastructure>
+    <database>
+      <primary>PostgreSQL 14+ with read replicas</primary>
+      <connection_pooling>HikariCP</connection_pooling>
+      <migrations>Flyway</migrations>
+      <backup_strategy>Daily automated backups with 30-day retention</backup_strategy>
+    </database>
+    <cache>
+      <type>Redis Cluster</type>
+      <purpose>Session storage, token blacklisting, rate limiting</purpose>
+      <ttl_strategy>Variable based on data type</ttl_strategy>
+    </cache>
+    <message_queue>
+      <type>Apache Kafka</type>
+      <purpose>Event streaming for audit logs and user events</purpose>
+      <topics>
+        <item>auth.user.registered</item>
+        <item>auth.user.login</item>
+        <item>auth.token.issued</item>
+      </topics>
+    </message_queue>
+    <monitoring>
+      <metrics>Prometheus with custom business metrics</metrics>
+      <logging>ELK Stack (Elasticsearch, Logstash, Kibana)</logging>
+      <tracing>Jaeger for distributed tracing</tracing>
+      <alerting>AlertManager with PagerDuty integration</alerting>
+    </monitoring>
+  </infrastructure>
+  <integrations>
+    <item>
+      <name>API Gateway</name>
+      <purpose>Route requests and provide cross-cutting concerns</purpose>
+      <technology>Kong or AWS API Gateway</technology>
+    </item>
+    <item>
+      <name>Service Mesh</name>
+      <purpose>Service-to-service communication and security</purpose>
+      <technology>Istio</technology>
+    </item>
+    <item>
+      <name>Identity Providers</name>
+      <purpose>External authentication sources</purpose>
+      <providers>
+        <item>Google OAuth</item>
+        <item>GitHub OAuth</item>
+        <item>SAML Identity Providers</item>
+      </providers>
+    </item>
+    <item>
+      <name>Email Service</name>
+      <purpose>Send verification and notification emails</purpose>
+      <technology>AWS SES or SendGrid</technology>
+    </item>
+    <item>
+      <name>SMS Gateway</name>
+      <purpose>Send MFA codes via SMS</purpose>
+      <technology>Twilio or AWS SNS</technology>
+    </item>
+  </integrations>
+  <backstage_catalog_findings>
+    <related_services>
+      <item>user-service</item>
+      <item>notification-service</item>
+      <item>api-gateway</item>
+    </related_services>
+    <shared_infrastructure>
+      <item>postgres-cluster</item>
+      <item>redis-cluster</item>
+      <item>kafka-cluster</item>
+    </shared_infrastructure>
+    <compliance_requirements>
+      <item>TLS 1.3</item>
+      <item>HashiCorp Vault</item>
+      <item>PII encryption</item>
+      <item>audit retention</item>
+    </compliance_requirements>
+    <recommended_patterns>
+      <item>Circuit Breaker</item>
+      <item>Distributed Tracing</item>
+      <item>Health Checks</item>
+    </recommended_patterns>
+  </backstage_catalog_findings>
+</authentication_service_architecture>

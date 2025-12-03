@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sprint Plan Template for Microservice Projects
+  
+  Usage: This template is used by the SprintMaster agent to structure sprint plans.
+-->
+<sprint_plan version="1.0" project="{{ project.name }}">
+  <metadata>
+    <created_at>{{ date }}</created_at>
+    <sprint_number>1</sprint_number>
+    <duration_weeks>2</duration_weeks>
+    <start_date><!-- YYYY-MM-DD --></start_date>
+    <end_date><!-- YYYY-MM-DD --></end_date>
+  </metadata>
+  
+  <goals>
+    <goal priority="P0"><!-- Primary sprint goal --></goal>
+    <goal priority="P1"><!-- Secondary sprint goal --></goal>
+  </goals>
+  
+  <capacity>
+    <team_size><!-- Number of developers --></team_size>
+    <total_points><!-- Total story points available --></total_points>
+    <allocated_points><!-- Points allocated to sprint --></allocated_points>
+  </capacity>
+  
+  <stories>
+    <story id="US001">
+      <title><!-- Story title --></title>
+      <description><!-- Story description --></description>
+      <points><!-- Story points --></points>
+      <assignee><!-- Developer name or TBD --></assignee>
+      <status>todo</status>
+      <tasks>
+        <task id="T001">
+          <description><!-- Task description --></description>
+          <estimated_hours><!-- Hours --></estimated_hours>
+          <status>todo</status>
+        </task>
+      </tasks>
+      <dependencies>
+        <!-- List story IDs this depends on -->
+      </dependencies>
+      <acceptance_criteria>
+        <criterion><!-- Testable criterion --></criterion>
+      </acceptance_criteria>
+    </story>
+  </stories>
+  
+  <risks>
+    <risk level="low">
+      <description><!-- Risk description --></description>
+      <mitigation><!-- Mitigation plan --></mitigation>
+      <probability><!-- low/medium/high --></probability>
+      <impact><!-- low/medium/high --></impact>
+    </risk>
+  </risks>
+  
+  <dependencies>
+    <external_dependency>
+      <name><!-- External dependency name --></name>
+      <owner><!-- Team or person responsible --></owner>
+      <due_date><!-- When needed by --></due_date>
+      <status>pending</status>
+    </external_dependency>
+  </dependencies>
+  
+  <retrospective>
+    <!-- To be filled after sprint completion -->
+    <what_went_well>
+      <item><!-- Positive observation --></item>
+    </what_went_well>
+    <what_to_improve>
+      <item><!-- Area for improvement --></item>
+    </what_to_improve>
+    <action_items>
+      <item assignee=""><!-- Action to take --></item>
+    </action_items>
+  </retrospective>
+</sprint_plan>
+

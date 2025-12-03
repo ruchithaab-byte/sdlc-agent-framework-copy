@@ -1,0 +1,108 @@
+<!-- Workaround: Service Registry via Event Registry -->
+<!-- Event-Driven Integration with Kafka/RabbitMQ (Available in Open Source) -->
+
+<!-- Event Definition: Event Type and Payload Structure -->
+<!-- Define in Flowable Control/Design or via API -->
+<!--
+{
+  "key": "orderCreated",
+  "name": "Order Created Event",
+  "payloadType": "json",
+  "payloadStructure": {
+    "orderId": "string",
+    "customerId": "string",
+    "amount": "number"
+  }
+}
+-->
+
+<!-- Channel Definition: Kafka Topic or JMS Queue -->
+<!-- Define in Flowable Control/Design or via API -->
+<!--
+{
+  "key": "orderEventsChannel",
+  "name": "Order Events Channel",
+  "type": "kafka",
+  "destination": "order-events-topic",
+  "serializerType": "json"
+}
+-->
+
+<!-- BPMN 2.0 XML: Message Start Event -->
+<!-- Process initiated by external event -->
+<!--
+<process id="orderProcessing">
+  <startEvent id="start">
+    <messageEventDefinition messageRef="orderCreatedMessage"/>
+  </startEvent>
+  
+  <serviceTask id="processOrder" 
+               flowable:delegateExpression="${orderProcessingDelegate}"/>
+  
+  <endEvent id="end"/>
+</process>
+-->
+
+<!-- BPMN 2.0 XML: Boundary Message Event -->
+<!-- In-flight process correlation -->
+<!--
+<process id="orderManagement">
+  <startEvent id="start"/>
+  
+  <userTask id="reviewOrder" name="Review Order"/>
+  
+  <boundaryEvent id="orderUpdated" attachedToRef="reviewOrder">
+    <messageEventDefinition messageRef="orderUpdatedMessage"/>
+  </boundaryEvent>
+  
+  <serviceTask id="updateOrder" 
+               flowable:delegateExpression="${updateOrderDelegate}"/>
+  
+  <endEvent id="end"/>
+</process>
+-->
+
+<!-- Delegate: Publish Event to Channel -->
+package com.example.flowable;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.flowable.engine.delegate.JavaDelegate;
+import org.flowable.engine.delegate.DelegateExecution;
+import org.flowable.eventregistry.api.EventRegistry;
+
+@Component("orderProcessingDelegate")
+public class OrderProcessingDelegate implements JavaDelegate {
+    
+    @Autowired
+    private EventRegistry eventRegistry;
+    
+    @Override
+    public void execute(DelegateExecution execution) {
+        String orderId = (String) execution.getVariable("orderId");
+        
+        // Publish event to Event Registry channel
+        Map<String, Object> eventPayload = new HashMap<>();
+        eventPayload.put("orderId", orderId);
+        eventPayload.put("status", "PROCESSED");
+        
+        eventRegistry.sendEventOutbound("orderProcessed", "orderEventsChannel", eventPayload);
+    }
+}
+
+<!-- Configuration: Event Registry Channels -->
+<!-- Configure in Flowable Control/Design or via application.properties -->
+<!--
+# Kafka Configuration (if using Kafka)
+spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.consumer.group-id=flowable-consumer
+-->
+
+<!-- Key Points: -->
+<!-- 1. Event Registry available in Flowable Open Source stack -->
+<!-- 2. Supports Kafka and JMS messaging infrastructure -->
+<!-- 3. Message Start Events for process initiation -->
+<!-- 4. Boundary Message Events for in-flight correlation -->
+<!-- 5. Workaround for proprietary Service Registry model restriction -->
+<!-- 6. Enables event-driven, decoupled architecture -->
+

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SDLC Agent Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 1rem;
+        background-color: #0f172a;
+        color: #e2e8f0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+      th,
+      td {
+        padding: 0.5rem;
+        border-bottom: 1px solid #1e293b;
+        text-align: left;
+      }
+      th {
+        background-color: #1e293b;
+      }
+      .status-success {
+        color: #22c55e;
+      }
+      .status-error {
+        color: #ef4444;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SDLC Agent Execution Dashboard</h1>
+    <p id="connection">Connecting...</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Session</th>
+          <th>Event</th>
+          <th>Tool</th>
+          <th>Status</th>
+          <th>Duration (ms)</th>
+        </tr>
+      </thead>
+      <tbody id="events"></tbody>
+    </table>
+    <script>
+      const eventsTable = document.getElementById("events");
+      const statusText = document.getElementById("connection");
+      
+      let ws = null;
+      let reconnectAttempts = 0;
+      let lastEventTime = null;
+      let eventCount = 0;
+      let connectionStartTime = null;
+
+      function prependEvent(event) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${event.timestamp}</td>
+          <td>${event.session_id}</td>
+          <td>${event.hook_event}</td>
+          <td>${event.tool_name || ""}</td>
+          <td class="status-${event.status}">${event.status}</td>
+          <td>${event.duration_ms ?? ""}</td>
+        `;
+        eventsTable.prepend(row);
+        while (eventsTable.children.length > 100) {
+          eventsTable.removeChild(eventsTable.lastChild);
+        }
+        
+        // Update stats
+        eventCount++;
+        lastEventTime = new Date();
+        updateStatus();
+      }
+
+      function updateStatus() {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          return;
+        }
+        
+        const uptime = connectionStartTime 
+          ? Math.floor((Date.now() - connectionStartTime) / 1000) 
+          : 0;
+        
+        const lastEvent = lastEventTime 
+          ? Math.floor((Date.now() - lastEventTime) / 1000) 
+          : null;
+        
+        let status = "🟢 Connected";
+        if (ws.readyState === WebSocket.OPEN) {
+          status += ` | Events: ${eventCount}`;
+          if (uptime > 0) {
+            status += ` | Uptime: ${uptime}s`;
+          }
+          if (lastEvent !== null) {
+            status += ` | Last event: ${lastEvent}s ago`;
+          }
+        }
+        
+        statusText.textContent = status;
+      }
+
+      function connect() {
+        try {
+          ws = new WebSocket("ws://localhost:8765");
+          
+          ws.onopen = () => {
+            reconnectAttempts = 0;
+            connectionStartTime = Date.now();
+            statusText.textContent = "🟢 Connected to dashboard server";
+            updateStatus();
+            console.log("✅ WebSocket connected");
+          };
+          
+          ws.onclose = () => {
+            statusText.textContent = "🔴 Disconnected. Reconnecting in 3s…";
+            reconnectAttempts++;
+            const delay = Math.min(3000 * reconnectAttempts, 30000);
+            setTimeout(connect, delay);
+            console.log(`⚠️ WebSocket disconnected. Reconnect attempt ${reconnectAttempts}`);
+          };
+          
+          ws.onerror = (error) => {
+            statusText.textContent = "🔴 WebSocket error. Check server.";
+            console.error("❌ WebSocket error:", error);
+          };
+          
+          ws.onmessage = (event) => {
+            try {
+              const payload = JSON.parse(event.data);
+              if (payload.type === "initial_data") {
+                eventsTable.innerHTML = "";
+                eventCount = payload.executions.length;
+                payload.executions.reverse().forEach(prependEvent);
+                console.log(`📊 Loaded ${eventCount} initial events`);
+                updateStatus();
+              }
+              if (payload.type === "new_execution") {
+                prependEvent(payload.data);
+                console.log("📨 New event received:", payload.data.hook_event);
+              }
+            } catch (e) {
+              console.error("❌ Error parsing message:", e);
+            }
+          };
+          
+          // Update status every second
+          setInterval(updateStatus, 1000);
+        } catch (e) {
+          console.error("❌ Error creating WebSocket:", e);
+          statusText.textContent = "🔴 Failed to connect. Check server.";
+        }
+      }
+
+      connect();
+    </script>
+  </body>
+</html>
+

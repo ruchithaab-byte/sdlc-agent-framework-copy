@@ -1,0 +1,103 @@
+// Java Callback Template
+// Custom logic execution at Flyway lifecycle events
+// Register as Spring component for automatic discovery
+
+package com.example.callback;
+
+import org.flywaydb.core.api.callback.Callback;
+import org.flywaydb.core.api.callback.Context;
+import org.flywaydb.core.api.callback.Event;
+import org.springframework.stereotype.Component;
+
+import java.sql.Connection;
+import java.sql.Statement;
+
+/**
+ * Example: Post-migration auditor callback
+ * Executes after entire migration run completes
+ * 
+ * Available Events:
+ * - BEFORE_MIGRATE: Before migration starts
+ * - AFTER_EACH_MIGRATE: After each migration script
+ * - AFTER_MIGRATE: After all migrations complete
+ * - BEFORE_CLEAN: Before clean operation
+ * - AFTER_CLEAN: After clean operation
+ * - And more (see Flyway documentation)
+ */
+@Component
+public class PostMigrationAuditor implements Callback {
+    
+    /**
+     * Determines which events this callback handles
+     */
+    @Override
+    public boolean supports(Event event, Context context) {
+        // Only trigger after entire migration run completes
+        return event == Event.AFTER_MIGRATE;
+    }
+    
+    /**
+     * Executes custom logic at the specified event
+     */
+    @Override
+    public void handle(Event event, Context context) {
+        Connection connection = context.getConnection();
+        
+        try (Statement stmt = connection.createStatement()) {
+            // Example: Record migration completion in audit table
+            String version = context.getConfiguration().getTarget() != null 
+                ? context.getConfiguration().getTarget().toString() 
+                : "latest";
+            
+            stmt.execute("INSERT INTO internal_audit (message, timestamp) VALUES (" +
+                        "'Migration successful. Schema version: " + version + "', " +
+                        "NOW())");
+            
+            // Example: Execute validation checks
+            // validateSchema(connection);
+            
+            // Example: Send notification to external system
+            // notifyExternalSystem(version);
+            
+        } catch (Exception e) {
+            System.err.println("Error during post-migration audit: " + e.getMessage());
+            // Log error but don't fail migration
+        }
+        
+        System.out.println("Flyway AFTER_MIGRATE event completed. Auditing registered.");
+    }
+    
+    /**
+     * Callback identifier
+     */
+    @Override
+    public String getCallbackName() {
+        return "PostMigrationAuditor";
+    }
+    
+    /**
+     * Whether callback can handle event in transaction
+     * Default: true (callback runs in same transaction as migration)
+     */
+    @Override
+    public boolean canHandleInTransaction(Event event, Context context) {
+        return true;
+    }
+    
+    // Optional: Additional callback methods
+    // @Override
+    // public boolean handles(Event event, Context context) { ... }
+    // @Override
+    // public void handle(Event event, Context context) { ... }
+}
+
+// Alternative: SQL Callback (simpler, file-based)
+// Place SQL file in migration directory with event-based naming:
+// - afterMigrate.sql (executes after migration)
+// - beforeMigrate.sql (executes before migration)
+// - afterEachMigrate.sql (executes after each migration script)
+//
+// Example afterMigrate.sql:
+// GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly_user;
+// INSERT INTO migration_log (version, executed_at) VALUES (current_setting('flyway.current'), NOW());
+

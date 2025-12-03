@@ -1,0 +1,27 @@
+// Gradle Dependency Configuration for Flyway with Spring Boot 3.2.5
+// Spring Boot BOM manages Flyway 11.14.1 automatically
+// CRITICAL: Include database-specific module (flyway-postgresql, flyway-mysql, etc.)
+
+dependencies {
+    // Core Flyway dependency (version managed by Spring Boot)
+    implementation 'org.flywaydb:flyway-core'
+    
+    // Database-specific module (REQUIRED for Flyway 10+)
+    // PostgreSQL
+    implementation 'org.flywaydb:flyway-postgresql'
+    
+    // Alternative database modules (use one based on your database):
+    // implementation 'org.flywaydb:flyway-mysql' (for MySQL/MariaDB)
+    // implementation 'org.flywaydb:flyway-sqlserver' (for SQL Server)
+    // implementation 'org.flywaydb:flyway-database-oracle' (for Oracle)
+    
+    // Spring Boot JPA Starter (if using JPA)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    
+    // Database Driver (example: PostgreSQL)
+    runtimeOnly 'org.postgresql:postgresql'
+}
+
+// Optional: Override Flyway version if needed
+// ext['flyway.version'] = '11.14.1'
+

@@ -1,0 +1,12 @@
+// Multiple resources, auto-closed in reverse order
+try (
+    InputStream in = new FileInputStream(inputFile);
+    OutputStream out = new FileOutputStream(outputFile)
+) {
+    // Process resources
+} catch (FileNotFoundException e) {
+    // Handle specific exception first
+} catch (IOException e) {
+    // Handle general exception
+}
+

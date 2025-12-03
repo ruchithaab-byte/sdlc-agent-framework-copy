@@ -1,0 +1,17 @@
+package kubernetes.admission.labels
+
+import rego.v1
+
+# Kubernetes Admission Control (Gatekeeper Style)
+# Checks for mandatory labels on resources.
+
+# Violation rule returns a set of errors.
+# If the set is empty, the resource is admitted.
+violation contains {"msg": msg, "details": {"label": mandatory_label}} if {
+	mandatory_label := "owner"
+
+	# Check if the label is missing
+	not input.review.object.metadata.labels[mandatory_label]
+
+	msg := sprintf("Deployment must contain required label: %v", [mandatory_label])
+}

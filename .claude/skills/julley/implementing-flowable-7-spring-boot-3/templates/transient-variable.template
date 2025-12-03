@@ -1,0 +1,71 @@
+<!-- Transient Variable Doctrine: Temporary vs Persistent Data -->
+<!-- Java Delegate: Variable Management Pattern -->
+
+package com.example.flowable;
+
+import org.flowable.engine.delegate.JavaDelegate;
+import org.flowable.engine.delegate.DelegateExecution;
+
+@Component("variableManagementDelegate")
+public class VariableManagementDelegate implements JavaDelegate {
+    
+    @Override
+    public void execute(DelegateExecution execution) {
+        // ❌ ANTI-PATTERN: Large payload as persistent variable
+        // execution.setVariable("apiResponse", largeJsonObject); // 10MB JSON
+        
+        // ✅ BEST PRACTICE: Transient variable for temporary data
+        // Discarded automatically at next wait state (User Task, Receive Task, async boundary)
+        execution.setTransientVariable("apiResponse", largeJsonObject);
+        execution.setTransientVariable("statusCode", 200);
+        execution.setTransientVariable("intermediateCalculation", result);
+        
+        // ✅ BEST PRACTICE: Persistent variable for audit-critical data
+        // Stored in database, tracked in history tables
+        execution.setVariable("orderId", orderId);
+        execution.setVariable("userId", userId);
+        execution.setVariable("status", "PROCESSING");
+        
+        // ✅ BEST PRACTICE: Store only reference for large documents
+        execution.setVariable("documentId", documentId); // Store ID, not full document
+        // Retrieve full document from external storage when needed
+        
+        // Use transient variable in immediate conditional routing
+        Integer statusCode = (Integer) execution.getTransientVariable("statusCode");
+        if (statusCode == 200) {
+            execution.setVariable("processStatus", "SUCCESS");
+        }
+    }
+}
+
+<!-- BPMN 2.0 XML: Conditional Routing with Transient Variable -->
+<!--
+<sequenceFlow id="successFlow" sourceRef="serviceTask" targetRef="successEnd">
+  <conditionExpression xsi:type="tFormalExpression">
+    ${statusCode == 200}
+  </conditionExpression>
+</sequenceFlow>
+-->
+
+<!-- Variable Access Patterns -->
+<!--
+// Transient Variables (temporary, discarded at wait state)
+execution.setTransientVariable("key", value);
+Object value = execution.getTransientVariable("key");
+
+// Persistent Variables (stored in database)
+execution.setVariable("key", value);
+Object value = execution.getVariable("key");
+
+// Task Variables (for User Tasks)
+taskService.setVariable(taskId, "key", value);
+Object value = taskService.getVariable(taskId, "key");
+-->
+
+<!-- Key Points: -->
+<!-- 1. Transient variables: Temporary data, API responses, status codes -->
+<!-- 2. Persistent variables: Audit-critical business data, IDs, status flags -->
+<!-- 3. Transient variables automatically discarded at next wait state -->
+<!-- 4. Store only references (IDs) for large documents -->
+<!-- 5. Reduces database load and maintains optimal performance -->
+

@@ -1,0 +1,30 @@
+package policy.abac
+
+import rego.v1
+
+# Default Deny
+default allow := false
+
+# Attribute-Based Access Control
+# Policies depend on attributes of the user, the resource, and the environment.
+
+# Input expectation:
+# {
+#   "action": "delete",
+#   "security_level": 5,
+#   "mfa_active": true,
+#   "resource": { "classification": "restricted" }
+# }
+
+# Allow delete if security clearance is high enough and MFA is on
+allow if {
+	input.action == "delete"
+	input.security_level >= 5
+	input.mfa_active == true
+}
+
+# Example: Resource matching
+allow if {
+	input.action == "read"
+	input.resource.classification == "public"
+}

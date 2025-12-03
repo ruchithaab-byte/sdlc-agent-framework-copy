@@ -1,0 +1,11 @@
+{
+  "apiPlaygroundInputs": {
+    "headers": {
+      "Authorization": "Bearer {{user.apiKey}}"
+    },
+    "query": {
+      "api_key": "{{user.apiKey}}"
+    }
+  }
+}
+

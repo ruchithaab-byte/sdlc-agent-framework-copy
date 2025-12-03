@@ -1,0 +1,7 @@
+// Declarative grouping and aggregation
+Map<String, Double> totals = products.stream()
+    .collect(Collectors.groupingBy(
+        Product::category,
+        Collectors.summingDouble(p -> p.price() * p.quantity())
+    ));
+

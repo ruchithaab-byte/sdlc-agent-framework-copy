@@ -1,0 +1,63 @@
+<!-- Async Continuation Pattern: Breaking Transaction Boundaries -->
+<!-- Service Task with flowable:async="true" -->
+
+<!-- BPMN 2.0 XML: Async Continuation -->
+<serviceTask id="asyncTask" 
+             name="Async Processing"
+             flowable:async="true"
+             flowable:delegateExpression="${myDelegate}"/>
+
+<!-- Use Case 1: Breaking Long Synchronous Path -->
+<!--
+<sequenceFlow id="flow1" sourceRef="task1" targetRef="asyncTask"/>
+<sequenceFlow id="flow2" sourceRef="asyncTask" targetRef="task2"/>
+-->
+
+<!-- Use Case 2: Before Parallel Gateway Join (Prevents Optimistic Locking) -->
+<!--
+<parallelGateway id="fork"/>
+<sequenceFlow id="flow1" sourceRef="fork" targetRef="task1"/>
+<sequenceFlow id="flow2" sourceRef="fork" targetRef="task2"/>
+
+<serviceTask id="asyncMarker1" 
+             flowable:async="true"
+             flowable:delegateExpression="${loggingDelegate}"/>
+<serviceTask id="asyncMarker2" 
+             flowable:async="true"
+             flowable:delegateExpression="${loggingDelegate}"/>
+
+<sequenceFlow id="flow3" sourceRef="task1" targetRef="asyncMarker1"/>
+<sequenceFlow id="flow4" sourceRef="task2" targetRef="asyncMarker2"/>
+
+<parallelGateway id="join"/>
+<sequenceFlow id="flow5" sourceRef="asyncMarker1" targetRef="join"/>
+<sequenceFlow id="flow6" sourceRef="asyncMarker2" targetRef="join"/>
+-->
+
+<!-- Simple Logging Delegate for Async Marker -->
+<!--
+@Component("loggingDelegate")
+public class LoggingDelegate implements JavaDelegate {
+    @Override
+    public void execute(DelegateExecution execution) {
+        // Minimal logic - just marks async boundary
+        // Execution continues in new transaction via Async Executor
+    }
+}
+-->
+
+<!-- Configuration (application.properties) -->
+<!--
+flowable.async-executor-activate=true
+flowable.async-executor-core-pool-size=10
+flowable.async-executor-max-pool-size=20
+flowable.async-executor-queue-capacity=100
+-->
+
+<!-- Key Points: -->
+<!-- 1. flowable:async="true" delegates execution to Async Executor -->
+<!-- 2. Creates new transaction boundary -->
+<!-- 3. Critical before parallel gateway joins to prevent optimistic locking -->
+<!-- 4. Minimizes database lock time -->
+<!-- 5. Essential for Flowable 7.0.1 (synchronous history logging) -->
+

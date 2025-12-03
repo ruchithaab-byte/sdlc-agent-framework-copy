@@ -1,0 +1,41 @@
+#!/bin/bash
+# Manual setup commands for Vertex AI permissions
+# Use this if gcloud is installed but you prefer manual control
+
+set -e
+
+PROJECT_ID="agents-with-claude"
+SERVICE_ACCOUNT_EMAIL="ruchitha-vertexai@agents-with-claude.iam.gserviceaccount.com"
+
+echo "============================================================"
+echo "Manual Vertex AI Setup"
+echo "============================================================"
+echo ""
+echo "Project ID: $PROJECT_ID"
+echo "Service Account: $SERVICE_ACCOUNT_EMAIL"
+echo ""
+echo "Copy and run these commands one by one:"
+echo ""
+echo "# 1. Authenticate (if not already)"
+echo "gcloud auth login"
+echo ""
+echo "# 2. Set project"
+echo "gcloud config set project $PROJECT_ID"
+echo ""
+echo "# 3. Enable APIs"
+echo "gcloud services enable cloudresourcemanager.googleapis.com --project=$PROJECT_ID"
+echo "gcloud services enable aiplatform.googleapis.com --project=$PROJECT_ID"
+echo "gcloud services enable serviceusage.googleapis.com --project=$PROJECT_ID"
+echo ""
+echo "# 4. Grant IAM roles"
+echo "gcloud projects add-iam-policy-binding $PROJECT_ID \\"
+echo "    --member=\"serviceAccount:$SERVICE_ACCOUNT_EMAIL\" \\"
+echo "    --role=\"roles/aiplatform.user\""
+echo ""
+echo "gcloud projects add-iam-policy-binding $PROJECT_ID \\"
+echo "    --member=\"serviceAccount:$SERVICE_ACCOUNT_EMAIL\" \\"
+echo "    --role=\"roles/iam.serviceAccountUser\""
+echo ""
+echo "# 5. Verify"
+echo "gcloud services list --enabled --project=$PROJECT_ID --filter=\"name:aiplatform.googleapis.com\""
+echo ""

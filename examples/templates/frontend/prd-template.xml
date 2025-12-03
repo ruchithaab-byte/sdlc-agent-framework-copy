@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PRD Template for Frontend Projects
+  
+  Usage: Copy this template to your target project's .sdlc/memories/prd.xml
+  and fill in the placeholders marked with {{ variable_name }}.
+-->
+<ProductRequirementDocument>
+  <metadata>
+    <title>{{ project.name }} PRD</title>
+    <version>1.0</version>
+    <created_date>{{ date }}</created_date>
+    <author>{{ author }}</author>
+    <status>Draft</status>
+    <project_type>frontend</project_type>
+  </metadata>
+
+  <executive_summary>
+    <overview>{{ project.description }}</overview>
+    <objectives>
+      <objective>Deliver exceptional user experience</objective>
+      <objective>Ensure accessibility compliance (WCAG 2.1)</objective>
+      <objective>Achieve fast load times and responsive design</objective>
+    </objectives>
+  </executive_summary>
+
+  <user_personas>
+    <persona id="P001">
+      <name><!-- Persona name --></name>
+      <description><!-- Who is this user? --></description>
+      <goals>
+        <goal><!-- What they want to achieve --></goal>
+      </goals>
+      <pain_points>
+        <pain_point><!-- Current frustrations --></pain_point>
+      </pain_points>
+    </persona>
+  </user_personas>
+
+  <requirements>
+    <functional_requirements>
+      <requirement id="FR001" priority="P0">
+        <title><!-- Requirement title --></title>
+        <description><!-- Detailed description --></description>
+        <ui_mockup><!-- Reference to design file --></ui_mockup>
+        <acceptance_criteria>
+          <criterion><!-- Specific, testable criterion --></criterion>
+        </acceptance_criteria>
+      </requirement>
+    </functional_requirements>
+
+    <non_functional_requirements>
+      <requirement id="NFR001" priority="P0">
+        <title>Performance</title>
+        <description>Page load and interaction performance targets</description>
+        <acceptance_criteria>
+          <criterion>First Contentful Paint (FCP) under 1.5s</criterion>
+          <criterion>Largest Contentful Paint (LCP) under 2.5s</criterion>
+          <criterion>Time to Interactive (TTI) under 3.5s</criterion>
+          <criterion>Cumulative Layout Shift (CLS) under 0.1</criterion>
+        </acceptance_criteria>
+      </requirement>
+      <requirement id="NFR002" priority="P0">
+        <title>Accessibility</title>
+        <description>WCAG 2.1 AA compliance</description>
+        <acceptance_criteria>
+          <criterion>All interactive elements keyboard accessible</criterion>
+          <criterion>Proper ARIA labels and landmarks</criterion>
+          <criterion>Color contrast ratios meet AA standards</criterion>
+        </acceptance_criteria>
+      </requirement>
+      <requirement id="NFR003" priority="P1">
+        <title>Responsive Design</title>
+        <description>Support for all device sizes</description>
+        <acceptance_criteria>
+          <criterion>Mobile-first responsive design</criterion>
+          <criterion>Breakpoints: mobile (320px), tablet (768px), desktop (1024px+)</criterion>
+        </acceptance_criteria>
+      </requirement>
+      <requirement id="NFR004" priority="P1">
+        <title>Browser Support</title>
+        <description>Cross-browser compatibility</description>
+        <acceptance_criteria>
+          <criterion>Chrome, Firefox, Safari, Edge (last 2 versions)</criterion>
+          <criterion>iOS Safari, Chrome Mobile</criterion>
+        </acceptance_criteria>
+      </requirement>
+    </non_functional_requirements>
+  </requirements>
+
+  <technical_specifications>
+    <architecture>
+      <frontend>
+        <framework>{{ project.tech_stack.frontend | join(", ") }}</framework>
+        <state_management><!-- Redux, Zustand, React Query, etc. --></state_management>
+        <styling><!-- Tailwind, CSS Modules, Styled Components --></styling>
+      </frontend>
+      <api_integration>
+        <type><!-- REST, GraphQL --></type>
+        <base_url><!-- API endpoint --></base_url>
+      </api_integration>
+      <infrastructure>
+        <hosting><!-- Vercel, Netlify, AWS CloudFront --></hosting>
+        <ci_cd>GitHub Actions</ci_cd>
+      </infrastructure>
+    </architecture>
+  </technical_specifications>
+
+  <user_flows>
+    <flow id="UF001">
+      <name><!-- Flow name --></name>
+      <description><!-- Flow description --></description>
+      <steps>
+        <step order="1"><!-- Step description --></step>
+      </steps>
+    </flow>
+  </user_flows>
+
+  <user_stories>
+    <story id="US001" points="0">
+      <title><!-- As a [role], I want [feature] so that [benefit] --></title>
+      <description><!-- Detailed story description --></description>
+      <acceptance_criteria>
+        <criterion><!-- Testable acceptance criterion --></criterion>
+      </acceptance_criteria>
+    </story>
+  </user_stories>
+
+  <timeline>
+    <phase name="Design">
+      <duration>1 week</duration>
+      <activities>
+        <activity>UI/UX design finalization</activity>
+        <activity>Component design system</activity>
+        <activity>Design review and approval</activity>
+      </activities>
+    </phase>
+    <phase name="Development">
+      <duration>3 weeks</duration>
+      <activities>
+        <activity>Setup project structure</activity>
+        <activity>Implement core components</activity>
+        <activity>API integration</activity>
+        <activity>State management</activity>
+      </activities>
+    </phase>
+    <phase name="Testing">
+      <duration>1 week</duration>
+      <activities>
+        <activity>Unit and integration testing</activity>
+        <activity>E2E testing</activity>
+        <activity>Accessibility audit</activity>
+        <activity>Performance testing</activity>
+      </activities>
+    </phase>
+    <phase name="Launch">
+      <duration>0.5 weeks</duration>
+      <activities>
+        <activity>Deploy to staging</activity>
+        <activity>UAT</activity>
+        <activity>Production deployment</activity>
+      </activities>
+    </phase>
+  </timeline>
+
+  <success_metrics>
+    <metric>
+      <name>Lighthouse Performance Score</name>
+      <target>&gt;= 90</target>
+      <measurement>Lighthouse audit</measurement>
+    </metric>
+    <metric>
+      <name>Accessibility Score</name>
+      <target>&gt;= 95</target>
+      <measurement>Lighthouse + axe audit</measurement>
+    </metric>
+  </success_metrics>
+</ProductRequirementDocument>
+

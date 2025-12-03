@@ -1,0 +1,30 @@
+package policy.multi_tenant
+
+import rego.v1
+
+# Multi-tenant policies often use "Deny" rules to enforce isolation constraints.
+# If ANY deny rule evaluates to true, the request is rejected.
+
+# 1. Enforce Tenant Isolation
+# Users can only access resources belonging to their own tenant.
+deny contains msg if {
+	input.user.tenant_id != input.resource.tenant_id
+	msg := "Cross-tenant access forbidden"
+}
+
+# 2. Account Status Checks
+# Block access if the user account is locked/suspended.
+deny contains msg if {
+	input.user.account_lockout_flag == true
+	msg := "Account is locked"
+}
+
+# 3. Main Allow Rule
+# Allow only if there are NO denials and the action is permitted.
+default allow := false
+
+allow if {
+	# Ensure no deny rules matched
+	count(deny) == 0
+	input.action == "read"
+}

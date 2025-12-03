@@ -1,0 +1,30 @@
+package gateway.authz
+
+import rego.v1
+
+default allow := false
+
+# Decode JWT once to avoid repetition
+# In production, verify the signature! (verify=true, certs provided)
+token_payload := payload if {
+	[_, payload, _] := io.jwt.decode(input.token)
+}
+
+# Reject invalid issuers
+deny contains msg if {
+	token_payload.iss != input.expected_issuer
+	msg := "Invalid token issuer"
+}
+
+# Main Allow Rule
+allow if {
+	# Ensure no denials
+	count(deny) == 0
+
+	# Check Roles
+	token_payload.role == "admin"
+
+	# Check Path & Method
+	input.path == ["v1", "admin"]
+	input.method == "POST"
+}

@@ -1,0 +1,79 @@
+<!-- External Worker Pattern: Decoupled Execution -->
+<!-- Worker Implementation with @FlowableWorker -->
+
+package com.example.flowable;
+
+import org.springframework.stereotype.Component;
+import org.flowable.external.client.AcquiredExternalWorkerJob;
+import org.flowable.external.worker.annotation.FlowableWorker;
+import org.flowable.external.worker.WorkerResult;
+import org.flowable.external.worker.WorkerResultBuilder;
+
+@Component
+public class PaymentProcessingWorker {
+    
+    @FlowableWorker(
+        topic = "paymentTopic",
+        lockDuration = 60000  // Lock for 60 seconds
+    )
+    public WorkerResult processPayment(
+            AcquiredExternalWorkerJob job,
+            WorkerResultBuilder resultBuilder) {
+        
+        // Extract process variables from job
+        String orderId = job.getVariable("orderId");
+        Double amount = job.getVariable("amount");
+        
+        try {
+            // Execute business logic (external service call, etc.)
+            PaymentResponse response = paymentService.process(orderId, amount);
+            
+            if (response.isSuccessful()) {
+                // Signal success with result variables
+                return resultBuilder
+                    .success()
+                    .variable("confirmationId", response.getConfirmationId())
+                    .variable("transactionId", response.getTransactionId());
+            } else {
+                // Signal failure with error details
+                return resultBuilder
+                    .failure()
+                    .message("Payment processing failed")
+                    .details(response.getErrorMessage());
+            }
+        } catch (Exception e) {
+            // Signal failure on exception
+            return resultBuilder
+                .failure()
+                .message("Payment processing error: " + e.getMessage())
+                .details(e.getClass().getName());
+        }
+    }
+}
+
+<!-- BPMN 2.0 XML: External Service Task -->
+<!--
+<serviceTask id="processPayment" 
+             name="Process Payment"
+             flowable:type="external"
+             flowable:topic="paymentTopic"/>
+-->
+
+<!-- Configuration (application.properties) -->
+<!--
+flowable.external-worker.base-url=http://localhost:8080/flowable-rest/service
+flowable.external-worker.username=admin
+flowable.external-worker.password=${FLOWABLE_PASSWORD}
+flowable.external-worker.concurrency=10
+flowable.external-worker.lock-duration=60000
+flowable.external-worker.number-of-tasks=10
+flowable.external-worker.polling-interval=1000
+-->
+
+<!-- Key Points: -->
+<!-- 1. @FlowableWorker annotation with topic matching BPMN -->
+<!-- 2. Worker polls Flowable REST API for jobs -->
+<!-- 3. Returns WorkerResult with success/failure -->
+<!-- 4. Result variables passed back to process -->
+<!-- 5. Decouples engine from long-running business logic -->
+

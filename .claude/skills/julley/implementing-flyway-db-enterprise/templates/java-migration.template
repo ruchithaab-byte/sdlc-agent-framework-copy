@@ -1,0 +1,101 @@
+// Java Migration Template
+// Use when SQL migrations are insufficient (complex transformations, conditional logic, large datasets)
+// Implement JavaMigration interface for programmatic migration logic
+
+package com.example.migration;
+
+import org.flywaydb.core.api.migration.BaseJavaMigration;
+import org.flywaydb.core.api.migration.Context;
+import org.springframework.stereotype.Component;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+/**
+ * Example: Complex data transformation migration
+ * File naming: V005__TransformUserData.java
+ * Location: src/main/java/com/example/migration/
+ * 
+ * Use Java migrations for:
+ * - Complex data transformations across multiple tables
+ * - Conditional logic based on database state
+ * - Large dataset processing with batching
+ * - Code reusability and rigorous testing
+ */
+public class V005__TransformUserData extends BaseJavaMigration {
+    
+    @Override
+    public void migrate(Context context) throws Exception {
+        Connection connection = context.getConnection();
+        
+        // Example: Complex multi-step transformation
+        try (Statement stmt = connection.createStatement()) {
+            // Step 1: Create temporary table
+            stmt.execute("CREATE TEMP TABLE user_temp AS SELECT * FROM users WHERE status = 'pending'");
+            
+            // Step 2: Transform data with conditional logic
+            try (PreparedStatement pstmt = connection.prepareStatement(
+                    "UPDATE user_temp SET processed_at = CURRENT_TIMESTAMP WHERE id = ?")) {
+                
+                try (ResultSet rs = stmt.executeQuery("SELECT id FROM user_temp")) {
+                    int batchCount = 0;
+                    while (rs.next()) {
+                        pstmt.setLong(1, rs.getLong("id"));
+                        pstmt.addBatch();
+                        batchCount++;
+                        
+                        // Batch processing for large datasets
+                        if (batchCount % 1000 == 0) {
+                            pstmt.executeBatch();
+                        }
+                    }
+                    pstmt.executeBatch();  // Final batch
+                }
+            }
+            
+            // Step 3: Merge back to main table
+            stmt.execute("UPDATE users u SET processed_at = ut.processed_at " +
+                        "FROM user_temp ut WHERE u.id = ut.id");
+            
+            // Step 4: Cleanup
+            stmt.execute("DROP TABLE user_temp");
+        }
+    }
+    
+    @Override
+    public Integer getChecksum() {
+        // Optional: Override to provide custom checksum calculation
+        // Default uses class bytecode checksum
+        return null;
+    }
+}
+
+// Alternative: Using JavaMigration interface directly (more control)
+/*
+import org.flywaydb.core.api.migration.JavaMigration;
+
+public class V005__TransformUserData implements JavaMigration {
+    @Override
+    public void migrate(org.flywaydb.core.api.migration.Context context) throws Exception {
+        // Implementation
+    }
+    
+    @Override
+    public Integer getChecksum() {
+        return null;
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Transform user data";
+    }
+    
+    @Override
+    public Integer getVersion() {
+        return 5;
+    }
+}
+*/
+

@@ -1,0 +1,17 @@
+apiVersion: kuma.io/v1alpha1
+kind: ContainerPatch
+metadata:
+  name: production-sidecar-sizing
+  namespace: kuma-system
+spec:
+  sidecarPatch:
+    - op: replace
+      path: /resources/requests/cpu
+      value: '"100m"'
+    - op: replace
+      path: /resources/requests/memory
+      value: '"128Mi"'
+    - op: replace
+      path: /resources/limits
+      value: '{ "cpu": "1", "memory": "1G" }'
+

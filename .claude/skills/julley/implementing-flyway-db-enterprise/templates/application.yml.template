@@ -1,0 +1,45 @@
+# Spring Boot 3.2.5 Flyway Configuration Template
+# Flyway auto-configures when flyway-core is on classpath
+# Migrations execute before Spring context loads beans requiring database schema
+
+spring:
+  # Primary datasource configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/app_db
+    username: app_user
+    password: ${APP_DB_PASSWORD}  # Use environment variables, never hardcode
+    
+  # Flyway configuration
+  flyway:
+    # Enable/disable Flyway (default: true)
+    enabled: true
+    
+    # Migration script locations (default: classpath:db/migration)
+    locations: classpath:db/migration
+    
+    # Dedicated DDL user credentials (optional, inherits datasource if not specified)
+    # Use separate credentials with elevated DDL privileges
+    # user: flyway_admin
+    # password: ${FLYWAY_DDL_PASSWORD}
+    # url: jdbc:postgresql://localhost:5432/app_db
+    
+    # Baseline existing schema (default: false)
+    # Set to true when adopting Flyway on existing database
+    baseline-on-migrate: false
+    
+    # Placeholders for SQL script substitution
+    placeholders:
+      default_role: 'standard_user'
+      schema_name: 'public'
+      # Add custom placeholders as needed
+    
+    # Validation suppression (use with caution, for transient issues only)
+    # ignore-migration-patterns: '*:missing'
+    
+    # Additional Flyway properties (if needed)
+    # validate-on-migrate: true
+    # clean-on-validation-error: false
+    # out-of-order: false
+    # baseline-version: 0
+    # baseline-description: 'Initial baseline'
+

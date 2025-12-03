@@ -1,0 +1,829 @@
+<code_review>
+  <metadata>
+    <review_date>2025-11-28</review_date>
+    <reviewer>QualityGuard Agent</reviewer>
+    <scope>React Dashboard - Recent Addition</scope>
+    <files_reviewed>
+      <file>/Users/macbook/agentic-coding-framework/sdlc-agent-framework/src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <file>/Users/macbook/agentic-coding-framework/sdlc-agent-framework/src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <file>/Users/macbook/agentic-coding-framework/sdlc-agent-framework/src/dashboard/react-app/src/components/AgentExecution/ExecutionLog.tsx</file>
+      <file>/Users/macbook/agentic-coding-framework/sdlc-agent-framework/src/dashboard/react-app/src/App.tsx</file>
+      <file>/Users/macbook/agentic-coding-framework/sdlc-agent-framework/src/dashboard/react-app/src/contexts/ThemeContext.tsx</file>
+      <file>/Users/macbook/agentic-coding-framework/sdlc-agent-framework/src/dashboard/websocket_server.py</file>
+    </files_reviewed>
+  </metadata>
+
+  <summary>
+    <total_issues>28</total_issues>
+    <critical>3</critical>
+    <high>8</high>
+    <medium>11</medium>
+    <low>6</low>
+    <overall_assessment>
+      The React dashboard implementation contains several critical issues that need immediate attention,
+      particularly around WebSocket connection management, memory leaks, and error handling. The code
+      demonstrates good use of TypeScript and React best practices in some areas, but has significant
+      reliability and performance concerns that could impact production usage.
+    </overall_assessment>
+  </summary>
+
+  <findings>
+    <!-- CRITICAL SEVERITY ISSUES -->
+    <issue>
+      <id>CR-001</id>
+      <severity>CRITICAL</severity>
+      <category>Memory Leak</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Lines 81-92</location>
+      <title>useEffect Dependency Array Causes Infinite Re-render Loop</title>
+      <description>
+        The useEffect hook has 'connect' in its dependency array (line 92), and 'connect' is a useCallback
+        that has no dependencies (line 68). This creates a problematic pattern where the effect will run
+        on every render. While useCallback with empty deps should be stable, in React's strict mode or
+        during development, this can cause unnecessary reconnections.
+
+        More critically, if the component unmounts and remounts rapidly (e.g., due to React Router navigation
+        or Strict Mode), this will create multiple WebSocket connections that are never properly cleaned up,
+        leading to memory leaks and connection exhaustion.
+      </description>
+      <impact>
+        - Memory leaks from unclosed WebSocket connections
+        - Excessive server connections consuming resources
+        - Potential application crashes in production
+        - Database connection pool exhaustion on the backend
+      </impact>
+      <recommendation>
+        Remove 'connect' from the dependency array and add ESLint disable comment with justification,
+        or restructure the hook to avoid this pattern. Consider using a ref to track if connection
+        is already established.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-002</id>
+      <severity>CRITICAL</severity>
+      <category>Race Condition / WebSocket Reliability</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Lines 52-63</location>
+      <title>Automatic Reconnection Without Connection State Validation</title>
+      <description>
+        The onclose handler automatically attempts to reconnect with exponential backoff, but it does
+        not check if:
+        1. The component is still mounted
+        2. A new connection attempt is already in progress
+        3. The closure was intentional (e.g., during component unmount)
+
+        This can lead to race conditions where multiple reconnection attempts occur simultaneously,
+        or reconnection attempts continue after the component unmounts.
+      </description>
+      <impact>
+        - Race conditions with multiple concurrent connection attempts
+        - Connections attempted after component unmount
+        - Server resource exhaustion from repeated connection attempts
+        - Unpredictable WebSocket state
+      </impact>
+      <recommendation>
+        Add a mounted ref to track component mount status and check it before reconnecting.
+        Add connection state management to prevent concurrent connection attempts.
+        Check if the close event was initiated by the client before auto-reconnecting.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-003</id>
+      <severity>CRITICAL</severity>
+      <category>Error Handling / Data Integrity</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Lines 33-45</location>
+      <title>Silent Failure of Invalid WebSocket Messages</title>
+      <description>
+        Invalid JSON messages are caught and logged to console but don't update error state or
+        notify users. This means data corruption or malformed server responses go unnoticed,
+        potentially leaving the UI in an inconsistent state with missing or outdated data.
+
+        Additionally, there's no validation of message structure beyond type checking, so
+        messages with missing required fields could cause runtime errors elsewhere.
+      </description>
+      <impact>
+        - Silent data loss when server sends malformed data
+        - UI showing stale or incomplete data without user awareness
+        - Potential runtime errors from malformed data propagating to components
+        - Difficult debugging of data synchronization issues
+      </impact>
+      <recommendation>
+        Update error state when message parsing fails. Add comprehensive message validation
+        using a schema validator (e.g., Zod). Consider showing a warning indicator in the UI
+        when data integrity issues are detected.
+      </recommendation>
+    </issue>
+
+    <!-- HIGH SEVERITY ISSUES -->
+    <issue>
+      <id>CR-004</id>
+      <severity>HIGH</severity>
+      <category>Performance / Memory Leak</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Line 40</location>
+      <title>Unbounded Array Growth with Hard Limit Only</title>
+      <description>
+        Events are limited to 1000 items via slice, but this is a hard limit that could still
+        cause performance issues. Each new event creates a new array with spread operator
+        [...prev], which is O(n) complexity. With rapid events, this could cause significant
+        performance degradation.
+
+        The slice operation creates a new array copy, compounding the memory allocation issue.
+      </description>
+      <impact>
+        - Performance degradation with high event frequency
+        - Excessive memory allocation and garbage collection
+        - UI freezing or stuttering during rapid event updates
+        - Battery drain on mobile devices
+      </impact>
+      <recommendation>
+        Use a more efficient data structure (e.g., circular buffer or deque). Consider using
+        immer for immutable updates, or React's useReducer with more efficient state updates.
+        Implement pagination or virtualization for event display.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-005</id>
+      <severity>HIGH</severity>
+      <category>Security / Configuration</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Line 4</location>
+      <title>Hardcoded WebSocket URL with HTTP Fallback</title>
+      <description>
+        The WebSocket URL defaults to 'ws://localhost:8765' (unencrypted) and there's no
+        validation that production environments use 'wss://' (encrypted). This could lead
+        to sensitive execution data being transmitted in plaintext over the network.
+
+        Additionally, there's no URL validation, so an attacker could potentially inject
+        a malicious WebSocket URL through environment variables.
+      </description>
+      <impact>
+        - Sensitive execution data transmitted unencrypted in production
+        - Man-in-the-middle attack vulnerability
+        - Potential for WebSocket URL injection attacks
+        - Compliance violations (GDPR, SOC2, etc.)
+      </impact>
+      <recommendation>
+        Enforce wss:// in production environments. Add URL validation to ensure only
+        whitelisted protocols and domains are allowed. Consider using relative URLs
+        that inherit the page protocol (ws:// for http://, wss:// for https://).
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-006</id>
+      <severity>HIGH</severity>
+      <category>React Best Practices / Performance</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <location>Lines 13-15</location>
+      <title>Unnecessary State and Effect for Derived Data</title>
+      <description>
+        The component maintains 'recentEvents' state that is simply events.slice(0, 100).
+        This is redundant state that could be computed directly, violating the DRY principle
+        and creating unnecessary re-renders.
+
+        The useEffect on lines 13-15 runs on every events update, creating an additional
+        render cycle.
+      </description>
+      <impact>
+        - Unnecessary re-renders degrading performance
+        - Increased memory usage from redundant state
+        - Potential for state synchronization bugs
+        - More complex code that's harder to maintain
+      </impact>
+      <recommendation>
+        Remove the recentEvents state and useEffect. Use const recentEvents = useMemo(() =>
+        events.slice(0, 100), [events]) or compute it directly in the render if the
+        computation is cheap.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-007</id>
+      <severity>HIGH</severity>
+      <category>Performance / React Best Practices</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <location>Lines 17-29</location>
+      <title>Stats Recalculated on Every Render</title>
+      <description>
+        The stats object is recalculated on every render without memoization. This involves
+        multiple filter and reduce operations over the entire events array, which could be
+        expensive with large datasets.
+
+        With events.length potentially reaching 1000 items, this means 3000+ array operations
+        on every render.
+      </description>
+      <impact>
+        - Significant performance impact with large event lists
+        - CPU waste on redundant calculations
+        - UI lag and reduced responsiveness
+        - Poor user experience on lower-end devices
+      </impact>
+      <recommendation>
+        Wrap the stats calculation in useMemo with events as dependency:
+        const stats = useMemo(() => ({ /* calculation */ }), [events]);
+        This ensures calculations only run when events actually change.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-008</id>
+      <severity>HIGH</severity>
+      <category>Error Handling</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <location>Lines 21-28</location>
+      <title>Division by Zero Not Handled in Average Duration</title>
+      <description>
+        The avgDuration calculation uses events.filter((e) => e.duration_ms).length as divisor
+        but doesn't explicitly handle the case where this is zero. While the ternary on line 21
+        checks events.length > 0, it doesn't guarantee filtered events exist.
+
+        If all events have undefined duration_ms, division by zero occurs, resulting in NaN.
+      </description>
+      <impact>
+        - NaN displayed in the UI for average duration
+        - Potential downstream errors if NaN propagates to calculations
+        - Poor user experience with broken statistics display
+      </impact>
+      <recommendation>
+        Add explicit check: const eventsWithDuration = events.filter(e => e.duration_ms);
+        Then check eventsWithDuration.length > 0 before division.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-009</id>
+      <severity>HIGH</severity>
+      <category>Type Safety</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/ExecutionLog.tsx</file>
+      <location>Line 90</location>
+      <title>Potentially Non-Unique Row Keys</title>
+      <description>
+        The rowKey function combines timestamp, session_id, and tool_name, but tool_name is
+        optional and could be undefined/null for multiple events. This could result in duplicate
+        keys if multiple events have the same timestamp and session_id with no tool_name.
+
+        Format: `${timestamp}-${session_id}-${tool_name || ''}` means two events like:
+        - { timestamp: "2024-01-01", session_id: "123", tool_name: undefined }
+        - { timestamp: "2024-01-01", session_id: "123", tool_name: null }
+        Both produce the same key: "2024-01-01-123-"
+      </description>
+      <impact>
+        - React warnings in console about duplicate keys
+        - Potential rendering bugs where wrong rows update
+        - Unpredictable table behavior during updates
+        - Difficult to debug UI issues
+      </impact>
+      <recommendation>
+        Add a unique ID field to ExecutionEvent type in the backend, or use index as fallback:
+        rowKey={(record, index) => `${record.timestamp}-${record.session_id}-${index}`}
+        Better yet, ensure backend provides a unique event ID.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-010</id>
+      <severity>HIGH</severity>
+      <category>Error Handling</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/ExecutionLog.tsx</file>
+      <location>Lines 18-21</location>
+      <title>Invalid Date Not Handled</title>
+      <description>
+        new Date(timestamp) can produce an Invalid Date if timestamp is malformed.
+        toLocaleString() on an Invalid Date returns "Invalid Date" string, which would
+        display in the UI without any error indication.
+
+        No validation or error handling for date parsing failures.
+      </description>
+      <impact>
+        - "Invalid Date" displayed in UI for corrupted data
+        - No indication to users that data is malformed
+        - Potential timezone issues without explicit formatting
+      </impact>
+      <recommendation>
+        Add date validation: const date = new Date(timestamp); if (isNaN(date.getTime()))
+        return 'Invalid Date'; Consider using a date library like dayjs (already in dependencies)
+        for more robust parsing and formatting.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-011</id>
+      <severity>HIGH</severity>
+      <category>Accessibility</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <location>Lines 92-101</location>
+      <title>Alert Missing Title Prop</title>
+      <description>
+        The Alert component uses 'title' prop which is not a valid Ant Design Alert prop.
+        The correct prop is 'message'. This means the error title won't display, reducing
+        the clarity of error messages shown to users.
+
+        According to Ant Design docs, Alert accepts: message, description, type, closable.
+      </description>
+      <impact>
+        - Error messages missing important context
+        - Reduced clarity for troubleshooting connection issues
+        - Poor user experience during errors
+      </impact>
+      <recommendation>
+        Change 'title' to 'message': message="Connection Error"
+      </recommendation>
+    </issue>
+
+    <!-- MEDIUM SEVERITY ISSUES -->
+    <issue>
+      <id>CR-012</id>
+      <severity>MEDIUM</severity>
+      <category>Type Safety</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Line 40</location>
+      <title>Non-null Assertion on Potentially Undefined Data</title>
+      <description>
+        The code uses message.data! (non-null assertion) when the type definition shows
+        data is optional (data?: ExecutionEvent). This bypasses TypeScript's safety checks
+        and could lead to runtime errors if the server sends a message without data.
+      </description>
+      <impact>
+        - Potential runtime errors if server sends incomplete messages
+        - TypeScript safety bypassed, defeating purpose of type checking
+        - Bugs could slip through to production
+      </impact>
+      <recommendation>
+        Replace with proper null checking: if (message.type === 'new_execution' && message.data)
+        { setEvents((prev) => [message.data, ...prev].slice(0, 1000)); }
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-013</id>
+      <severity>MEDIUM</severity>
+      <category>Code Quality</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Lines 70-79</location>
+      <title>Manual Reconnect Doesn't Clear Pending Timeout</title>
+      <description>
+        The reconnect function clears reconnectTimeoutRef but if an automatic reconnection
+        is scheduled and user clicks manual reconnect, there's a potential race where both
+        the cleared timeout and the new connection attempt execute.
+
+        Additionally, calling ws.close() on line 75 will trigger the onclose handler which
+        schedules another reconnection, potentially conflicting with the manual reconnect.
+      </description>
+      <impact>
+        - Race conditions between manual and automatic reconnections
+        - Multiple simultaneous connection attempts
+        - Unpredictable connection state
+      </impact>
+      <recommendation>
+        Set a flag to prevent automatic reconnection when manual reconnect is triggered.
+        Close WebSocket with a specific close code to distinguish intentional vs error closures.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-014</id>
+      <severity>MEDIUM</severity>
+      <category>Performance</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <location>Lines 31-61</location>
+      <title>Static Array Recreated on Every Render</title>
+      <description>
+        The statCards array is recreated on every render even though its structure is static
+        and only values change. This creates unnecessary object allocations and could trigger
+        unnecessary re-renders in child components.
+      </description>
+      <impact>
+        - Unnecessary memory allocations
+        - Potential child component re-renders
+        - Slightly degraded performance
+      </impact>
+      <recommendation>
+        Define the array structure outside the component and only map dynamic values in render,
+        or use useMemo to memoize the array.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-015</id>
+      <severity>MEDIUM</severity>
+      <category>Accessibility / UX</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <location>Lines 72-88</location>
+      <title>No User Action for Reconnection When Disconnected</title>
+      <description>
+        While the reconnect function is available from useWebSocket, it's not exposed in
+        the UI. Users seeing a "Disconnected" status have no way to manually trigger
+        reconnection, which could be frustrating if automatic reconnection fails or takes too long.
+      </description>
+      <impact>
+        - Poor user experience during connection issues
+        - Users may refresh entire page unnecessarily
+        - No feedback on reconnection attempts
+      </impact>
+      <recommendation>
+        Add a "Reconnect" button when isConnected is false. Show reconnection attempt count
+        and next retry time to give users feedback on what's happening.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-016</id>
+      <severity>MEDIUM</severity>
+      <category>Performance</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/ExecutionLog.tsx</file>
+      <location>Lines 88-95</location>
+      <title>Table Re-renders Not Optimized</title>
+      <description>
+        The Table component doesn't use React.memo or any optimization. Every parent re-render
+        (which happens frequently due to WebSocket updates) will re-render the entire table,
+        even if the events prop hasn't changed.
+      </description>
+      <impact>
+        - Unnecessary table re-renders
+        - Performance degradation with large tables
+        - Choppy scrolling experience
+      </impact>
+      <recommendation>
+        Wrap component in React.memo: export const ExecutionLog = React.memo(({ events }) => ...)
+        Or memoize the columns array since it's static.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-017</id>
+      <severity>MEDIUM</severity>
+      <category>Type Safety</category>
+      <file>src/dashboard/react-app/src/types/index.ts</file>
+      <location>Lines 1-16</location>
+      <title>Loose Type Definitions for Event Fields</title>
+      <description>
+        Most fields in ExecutionEvent are optional (tool_name?, agent_name?, phase?, duration_ms?)
+        but there's no clear documentation of when these fields should be present. This makes it
+        difficult to write reliable code that handles these fields correctly.
+
+        Additionally, hook_event is a string but should probably be a union of specific event types
+        for better type safety.
+      </description>
+      <impact>
+        - Unclear data contracts between frontend and backend
+        - Potential runtime errors from unexpected undefined values
+        - Harder to maintain and reason about code
+      </impact>
+      <recommendation>
+        Document which fields are always present vs optional. Consider creating union types for
+        different event kinds. Example: type ToolEvent = { hook_event: 'tool_use', tool_name: string }
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-018</id>
+      <severity>MEDIUM</severity>
+      <category>Code Quality / DRY</category>
+      <file>src/dashboard/react-app/src/App.tsx</file>
+      <location>Lines 15-71</location>
+      <title>Theme Configuration Duplicated in Component</title>
+      <description>
+        The darkTheme and lightTheme configurations are defined inline in the AppContent component.
+        This creates a new theme object on every render, which could cause unnecessary re-renders
+        of the ConfigProvider and all children.
+
+        Theme configuration should be extracted to a separate file or at minimum moved outside
+        the component to maintain referential equality.
+      </description>
+      <impact>
+        - Unnecessary re-renders of entire app
+        - Difficult to maintain theme consistency
+        - Code duplication if themes needed elsewhere
+      </impact>
+      <recommendation>
+        Extract theme configurations to a separate themes.ts file and import them.
+        This ensures referential stability and improves maintainability.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-019</id>
+      <severity>MEDIUM</severity>
+      <category>Error Handling</category>
+      <file>src/dashboard/react-app/src/contexts/ThemeContext.tsx</file>
+      <location>Lines 13-16</location>
+      <title>localStorage Access Not Wrapped in Try-Catch</title>
+      <description>
+        localStorage.getItem can throw errors in several scenarios:
+        - Private/incognito mode in some browsers
+        - Storage quota exceeded
+        - Security policies blocking access
+
+        The app would crash on load if localStorage is unavailable.
+      </description>
+      <impact>
+        - App crash in private browsing mode
+        - App crash when storage is disabled
+        - Poor user experience in edge cases
+      </impact>
+      <recommendation>
+        Wrap localStorage access in try-catch blocks and provide fallback behavior.
+        Consider using a utility function for safe localStorage access.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-020</id>
+      <severity>MEDIUM</severity>
+      <category>Security / Input Validation</category>
+      <file>src/dashboard/react-app/src/contexts/ThemeContext.tsx</file>
+      <location>Lines 13-16</location>
+      <title>localStorage Value Not Sanitized</title>
+      <description>
+        The value from localStorage is checked with === comparison but if an attacker somehow
+        injects a different value, it silently falls back to 'dark'. While not a critical security
+        issue, it's better to be explicit about validation.
+      </description>
+      <impact>
+        - Potential for unexpected theme values
+        - Could cause rendering issues if type coercion occurs
+      </impact>
+      <recommendation>
+        Use a type guard or validation function to ensure the value is exactly 'light' or 'dark'
+        before using it.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-021</id>
+      <severity>MEDIUM</severity>
+      <category>Performance / Backend</category>
+      <file>src/dashboard/websocket_server.py</file>
+      <location>Lines 92-128</location>
+      <title>Database Polling Instead of Push-based Updates</title>
+      <description>
+        The server polls the database every second for new events rather than using a push-based
+        approach. This creates unnecessary database load and latency in event delivery.
+
+        With multiple connected clients, this means continuous database queries even when no
+        new events exist.
+      </description>
+      <impact>
+        - Unnecessary database load from continuous polling
+        - 1-second latency in event delivery
+        - Scalability issues with many clients
+        - Wasted resources when system is idle
+      </impact>
+      <recommendation>
+        Implement a pub/sub pattern where the logging system notifies the WebSocket server of
+        new events. Use asyncio.Event or queue for thread-safe event notification. Consider
+        using database triggers or a message queue like Redis.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-022</id>
+      <severity>MEDIUM</severity>
+      <category>Error Handling / Reliability</category>
+      <file>src/dashboard/websocket_server.py</file>
+      <location>Lines 83-90</location>
+      <title>WebSocket Handler Ignores All Client Messages</title>
+      <description>
+        The handler explicitly ignores all incoming messages (line 86-88: async for _ in websocket: pass).
+        While the comment says "Dashboard is push-only", this means clients can't send heartbeats,
+        acknowledge receipt, or request specific data.
+
+        This makes it impossible to implement features like:
+        - Client heartbeats to detect dead connections
+        - Request for historical data
+        - Pause/resume event streaming
+      </description>
+      <impact>
+        - No way to detect dead connections on server side
+        - Limited functionality for future enhancements
+        - Potential memory leak from zombie connections
+      </impact>
+      <recommendation>
+        Implement a basic message protocol for client commands like heartbeat, historical data
+        requests, and stream control. This provides flexibility for future features.
+      </recommendation>
+    </issue>
+
+    <!-- LOW SEVERITY ISSUES -->
+    <issue>
+      <id>CR-023</id>
+      <severity>LOW</severity>
+      <category>Code Quality</category>
+      <file>src/dashboard/react-app/src/hooks/useWebSocket.ts</file>
+      <location>Lines 30, 54</location>
+      <title>Console.log Statements in Production Code</title>
+      <description>
+        Multiple console.log statements exist throughout the code. While useful for development,
+        these should be removed or wrapped in a debug flag for production builds.
+      </description>
+      <impact>
+        - Console pollution in production
+        - Potential exposure of internal state information
+        - Slightly reduced performance
+      </impact>
+      <recommendation>
+        Use a logging utility that can be configured to suppress logs in production, or remove
+        console.logs and rely on proper error boundaries and monitoring.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-024</id>
+      <severity>LOW</severity>
+      <category>UX / Accessibility</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/RealTimeFeed.tsx</file>
+      <location>Lines 36, 43, 50, 58</location>
+      <title>Emoji Icons Used Instead of Icon Components</title>
+      <description>
+        The component uses emoji icons (📊, ✅, ❌, ⏱️) which can render inconsistently across
+        platforms and devices. Some older systems may show them as black-and-white symbols.
+
+        Ant Design Icons are already being used elsewhere in the file, so this is inconsistent.
+      </description>
+      <impact>
+        - Inconsistent visual appearance across platforms
+        - Accessibility issues for screen readers
+        - Unprofessional appearance on some systems
+      </impact>
+      <recommendation>
+        Replace emoji with Ant Design Icons: BarChartOutlined, CheckCircleOutlined,
+        CloseCircleOutlined, ClockCircleOutlined for consistency and accessibility.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-025</id>
+      <severity>LOW</severity>
+      <category>Code Style</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/ExecutionLog.tsx</file>
+      <location>Lines 12-83</location>
+      <title>Columns Definition Could Be Extracted</title>
+      <description>
+        The columns definition is recreated on every render. While this isn't a major performance
+        issue, it's inefficient and violates React best practices. Static configurations should
+        be defined outside the component.
+      </description>
+      <impact>
+        - Minor performance impact
+        - Code readability reduced
+      </impact>
+      <recommendation>
+        Move columns definition outside the component or use useMemo to memoize it.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-026</id>
+      <severity>LOW</severity>
+      <category>Accessibility</category>
+      <file>src/dashboard/react-app/src/components/AgentExecution/ExecutionLog.tsx</file>
+      <location>Lines 88-95</location>
+      <title>Table Missing aria-label or Caption</title>
+      <description>
+        The Table component doesn't have an accessible label or caption, making it difficult
+        for screen reader users to understand what the table contains.
+      </description>
+      <impact>
+        - Reduced accessibility for visually impaired users
+        - Potential WCAG compliance issues
+      </impact>
+      <recommendation>
+        Add aria-label="Agent execution events" to the Table component or wrap it with
+        a caption element.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-027</id>
+      <severity>LOW</severity>
+      <category>Configuration</category>
+      <file>src/dashboard/react-app/vite.config.ts</file>
+      <location>Lines 1-11</location>
+      <title>Missing Build Optimizations</title>
+      <description>
+        The Vite configuration is minimal and doesn't include production optimizations like:
+        - Source map configuration
+        - Chunk splitting strategy
+        - Asset optimization
+        - Build output directory customization
+      </description>
+      <impact>
+        - Larger bundle sizes
+        - Slower initial load times
+        - Missing debugging tools in production
+      </impact>
+      <recommendation>
+        Add build configuration with proper chunk splitting, source maps for production
+        debugging, and asset optimization settings.
+      </recommendation>
+    </issue>
+
+    <issue>
+      <id>CR-028</id>
+      <severity>LOW</severity>
+      <category>Documentation</category>
+      <file>Multiple files</file>
+      <location>N/A</location>
+      <title>Missing JSDoc Comments and Component Documentation</title>
+      <description>
+        None of the reviewed components have JSDoc comments explaining their purpose,
+        props, or behavior. This makes it harder for other developers to understand
+        and maintain the code.
+      </description>
+      <impact>
+        - Reduced code maintainability
+        - Steeper learning curve for new developers
+        - Harder to generate automatic documentation
+      </impact>
+      <recommendation>
+        Add JSDoc comments to all exported components, hooks, and complex functions.
+        Document prop types, return types, and any side effects.
+      </recommendation>
+    </issue>
+  </findings>
+
+  <recommendations>
+    <priority_actions>
+      <action priority="1">
+        Fix CR-001: Restructure useWebSocket hook to prevent infinite re-render loop and
+        memory leaks. Add proper connection lifecycle management with mounted ref.
+      </action>
+      <action priority="2">
+        Fix CR-002: Implement proper reconnection state management to prevent race conditions.
+        Add checks for component mount status before reconnecting.
+      </action>
+      <action priority="3">
+        Fix CR-003: Add comprehensive error handling for malformed WebSocket messages.
+        Implement message validation schema and update UI error state.
+      </action>
+      <action priority="4">
+        Fix CR-005: Enforce WSS in production and add WebSocket URL validation to prevent
+        security vulnerabilities.
+      </action>
+      <action priority="5">
+        Fix CR-004, CR-006, CR-007: Optimize performance by using useMemo for derived state
+        and expensive calculations. Remove redundant state.
+      </action>
+    </priority_actions>
+
+    <testing_recommendations>
+      <test_scenario>WebSocket connection/disconnection under rapid component mount/unmount</test_scenario>
+      <test_scenario>Malformed JSON message handling</test_scenario>
+      <test_scenario>High-frequency event streams (1000+ events/second)</test_scenario>
+      <test_scenario>Network interruption and reconnection scenarios</test_scenario>
+      <test_scenario>LocalStorage unavailable (private browsing mode)</test_scenario>
+      <test_scenario>Invalid date formats in event timestamps</test_scenario>
+      <test_scenario>Events with all optional fields as undefined</test_scenario>
+    </testing_recommendations>
+
+    <security_hardening>
+      <item>Implement Content Security Policy headers</item>
+      <item>Add rate limiting on WebSocket connections</item>
+      <item>Validate all environment variables at build time</item>
+      <item>Implement WebSocket authentication if handling sensitive data</item>
+      <item>Add CORS configuration review</item>
+    </security_hardening>
+
+    <performance_optimization>
+      <item>Implement virtual scrolling for ExecutionLog table</item>
+      <item>Add service worker for offline capability</item>
+      <item>Implement proper code splitting and lazy loading</item>
+      <item>Add bundle size monitoring to CI/CD</item>
+      <item>Consider using React.lazy for route-based splitting</item>
+    </performance_optimization>
+  </recommendations>
+
+  <positive_findings>
+    <strength>TypeScript is properly configured with strict mode enabled</strength>
+    <strength>Good use of React hooks and functional components</strength>
+    <strength>Proper separation of concerns with custom hooks</strength>
+    <strength>Theme context implementation follows React best practices</strength>
+    <strength>Exponential backoff implemented for WebSocket reconnection</strength>
+    <strength>Consistent use of Ant Design component library</strength>
+    <strength>Modern build tooling with Vite</strength>
+  </positive_findings>
+
+  <technical_debt>
+    <debt_item estimated_hours="8">
+      Refactor WebSocket hook to use a more robust state management solution
+      (e.g., useReducer or XState state machine)
+    </debt_item>
+    <debt_item estimated_hours="4">
+      Implement comprehensive error boundary at app level
+    </debt_item>
+    <debt_item estimated_hours="6">
+      Add unit tests for WebSocket hook and components
+    </debt_item>
+    <debt_item estimated_hours="4">
+      Create shared utilities for date formatting and validation
+    </debt_item>
+    <debt_item estimated_hours="3">
+      Extract theme configurations to separate module
+    </debt_item>
+  </technical_debt>
+</code_review>

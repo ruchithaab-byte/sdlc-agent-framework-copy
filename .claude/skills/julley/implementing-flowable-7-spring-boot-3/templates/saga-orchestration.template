@@ -1,0 +1,94 @@
+<!-- Saga Orchestration Pattern: Distributed Transaction Coordination -->
+<!-- BPMN 2.0 XML with Compensation Flows -->
+
+<process id="orderSaga" name="Order Processing Saga">
+  <startEvent id="start"/>
+  
+  <!-- Payment Service Task -->
+  <serviceTask id="processPayment" 
+               name="Process Payment"
+               flowable:delegateExpression="${paymentDelegate}"/>
+  
+  <!-- Boundary Error Event: Captures payment failures -->
+  <boundaryEvent id="paymentError" attachedToRef="processPayment">
+    <errorEventDefinition errorRef="paymentFailed"/>
+  </boundaryEvent>
+  
+  <!-- Inventory Service Task -->
+  <serviceTask id="reserveInventory" 
+               name="Reserve Inventory"
+               flowable:delegateExpression="${inventoryDelegate}"/>
+  
+  <!-- Boundary Error Event: Captures inventory failures -->
+  <boundaryEvent id="inventoryError" attachedToRef="reserveInventory">
+    <errorEventDefinition errorRef="inventoryFailed"/>
+  </boundaryEvent>
+  
+  <!-- Shipping Service Task -->
+  <serviceTask id="shipOrder" 
+               name="Ship Order"
+               flowable:delegateExpression="${shippingDelegate}"/>
+  
+  <!-- Compensation Handlers -->
+  <serviceTask id="compensatePayment" 
+               name="Refund Payment"
+               flowable:isForCompensation="true"
+               flowable:delegateExpression="${refundDelegate}"/>
+  
+  <serviceTask id="compensateInventory" 
+               name="Release Inventory"
+               flowable:isForCompensation="true"
+               flowable:delegateExpression="${releaseInventoryDelegate}"/>
+  
+  <!-- Error Sequence Flows: Trigger compensation -->
+  <sequenceFlow id="paymentErrorFlow" sourceRef="paymentError" targetRef="compensatePayment"/>
+  <sequenceFlow id="inventoryErrorFlow" sourceRef="inventoryError" targetRef="compensateInventory"/>
+  
+  <endEvent id="end"/>
+</process>
+
+<!-- Java Delegate Example: Payment Delegate -->
+<!--
+@Component("paymentDelegate")
+public class PaymentDelegate implements JavaDelegate {
+    @Autowired
+    private PaymentService paymentService;
+    
+    @Override
+    public void execute(DelegateExecution execution) {
+        String orderId = (String) execution.getVariable("orderId");
+        Double amount = (Double) execution.getVariable("amount");
+        
+        PaymentResult result = paymentService.process(orderId, amount);
+        
+        if (!result.isSuccessful()) {
+            throw new BpmnError("paymentFailed", "Payment processing failed");
+        }
+        
+        execution.setVariable("paymentId", result.getPaymentId());
+    }
+}
+-->
+
+<!-- Compensation Delegate Example -->
+<!--
+@Component("refundDelegate")
+public class RefundDelegate implements JavaDelegate {
+    @Autowired
+    private PaymentService paymentService;
+    
+    @Override
+    public void execute(DelegateExecution execution) {
+        String paymentId = (String) execution.getVariable("paymentId");
+        paymentService.refund(paymentId);
+    }
+}
+-->
+
+<!-- Key Points: -->
+<!-- 1. Each Service Task has Boundary Error Event -->
+<!-- 2. Compensation handlers marked with flowable:isForCompensation="true" -->
+<!-- 3. BPMN errors trigger compensation flows -->
+<!-- 4. Compensation must be idempotent and reversible -->
+<!-- 5. Process acts as Saga Orchestrator coordinating microservices -->
+

@@ -1,0 +1,25 @@
+package policy.authz
+
+import rego.v1
+
+# Default Deny: Secure by default
+default allow := false
+
+# Metadata: Helpful for decision logging
+# Returns true if the user is an admin
+allow if {
+	input.user == "admin"
+}
+
+# Allow specific read access for authorized users
+# Input Schema expectation:
+# {
+#   "method": "GET",
+#   "path": ["v1", "data"],
+#   "user": "alice"
+# }
+allow if {
+	input.method == "GET"
+	input.path == ["v1", "data"]
+	input.user == "alice"
+}

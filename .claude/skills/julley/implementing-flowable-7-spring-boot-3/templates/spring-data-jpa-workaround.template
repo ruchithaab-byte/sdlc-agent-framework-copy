@@ -1,0 +1,103 @@
+<!-- Workaround: Data Persistence with Spring Data JPA -->
+<!-- Separate Business Entity Persistence from Process Engine -->
+
+<!-- JPA Entity: Business Data -->
+package com.example.domain;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "loan_applications")
+public class LoanApplication {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String applicantName;
+    private Double amount;
+    private String status;
+    private LocalDateTime createdAt;
+    
+    // Getters and setters
+}
+
+<!-- Spring Data Repository -->
+package com.example.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.domain.LoanApplication;
+
+public interface LoanApplicationRepository extends JpaRepository<LoanApplication, Long> {
+    // Custom query methods
+}
+
+<!-- Delegate: Store Only ID as Process Variable -->
+package com.example.flowable;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.flowable.engine.delegate.JavaDelegate;
+import org.flowable.engine.delegate.DelegateExecution;
+import com.example.domain.LoanApplication;
+import com.example.repository.LoanApplicationRepository;
+
+@Component("loanProcessingDelegate")
+public class LoanProcessingDelegate implements JavaDelegate {
+    
+    @Autowired
+    private LoanApplicationRepository loanRepository;
+    
+    @Override
+    public void execute(DelegateExecution execution) {
+        // Create business entity
+        LoanApplication application = new LoanApplication();
+        application.setApplicantName((String) execution.getVariable("applicantName"));
+        application.setAmount((Double) execution.getVariable("amount"));
+        application.setStatus("PENDING");
+        
+        // Persist via Spring Data JPA
+        LoanApplication saved = loanRepository.save(application);
+        
+        // ✅ Store only ID as process variable (not full entity)
+        execution.setVariable("loanApplicationId", saved.getId());
+        
+        // Full entity remains in application database
+        // Process engine database stores only lightweight reference
+    }
+}
+
+<!-- Delegate: Retrieve Full Entity When Needed -->
+package com.example.flowable;
+
+@Component("loanApprovalDelegate")
+public class LoanApprovalDelegate implements JavaDelegate {
+    
+    @Autowired
+    private LoanApplicationRepository loanRepository;
+    
+    @Override
+    public void execute(DelegateExecution execution) {
+        // Retrieve ID from process variable
+        Long loanApplicationId = (Long) execution.getVariable("loanApplicationId");
+        
+        // Retrieve full entity from application database
+        LoanApplication application = loanRepository.findById(loanApplicationId)
+            .orElseThrow(() -> new RuntimeException("Loan application not found"));
+        
+        // Process full entity
+        application.setStatus("APPROVED");
+        loanRepository.save(application);
+        
+        // Update process variable if needed
+        execution.setVariable("loanStatus", "APPROVED");
+    }
+}
+
+<!-- Key Points: -->
+<!-- 1. Business entities stored in application database (separate from Flowable database) -->
+<!-- 2. Process variables store only lightweight references (IDs, foreign keys) -->
+<!-- 3. Retrieve full entities via Spring Data repositories when needed -->
+<!-- 4. Workaround for Flowable Open Source restriction on Data Object models -->
+<!-- 5. Maintains separation of concerns: process state vs business data -->
+

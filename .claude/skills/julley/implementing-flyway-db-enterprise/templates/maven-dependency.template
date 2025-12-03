@@ -1,0 +1,44 @@
+<!-- Maven Dependency Configuration for Flyway with Spring Boot 3.2.5 -->
+<!-- Spring Boot BOM manages Flyway 11.14.1 automatically -->
+<!-- CRITICAL: Include database-specific module (flyway-postgresql, flyway-mysql, etc.) -->
+
+<dependencies>
+    <!-- Core Flyway dependency (version managed by Spring Boot BOM) -->
+    <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-core</artifactId>
+    </dependency>
+    
+    <!-- Database-specific module (REQUIRED for Flyway 10+) -->
+    <!-- PostgreSQL -->
+    <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-postgresql</artifactId>
+    </dependency>
+    
+    <!-- Alternative database modules (use one based on your database):
+         - flyway-mysql (for MySQL/MariaDB)
+         - flyway-sqlserver (for SQL Server)
+         - flyway-database-oracle (for Oracle)
+    -->
+    
+    <!-- Spring Boot JPA Starter (if using JPA) -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    
+    <!-- Database Driver (example: PostgreSQL) -->
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+    </dependency>
+</dependencies>
+
+<!-- Optional: Override Flyway version if needed -->
+<!--
+<properties>
+    <flyway.version>11.14.1</flyway.version>
+</properties>
+-->
+

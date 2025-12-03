@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PRD Template for Microservice Projects
+  
+  Usage: Copy this template to your target project's .sdlc/memories/prd.xml
+  and fill in the placeholders marked with {{ variable_name }}.
+  
+  The ProductSpec agent will use this structure when generating PRDs.
+-->
+<ProductRequirementDocument>
+  <metadata>
+    <title>{{ project.name }} PRD</title>
+    <version>1.0</version>
+    <created_date>{{ date }}</created_date>
+    <author>{{ author }}</author>
+    <status>Draft</status>
+  </metadata>
+
+  <executive_summary>
+    <overview>
+      <!-- High-level description of the service and its purpose -->
+      {{ project.description }}
+    </overview>
+    <objectives>
+      <!-- List 3-5 key objectives for this service -->
+      <objective><!-- Primary objective --></objective>
+      <objective><!-- Secondary objective --></objective>
+      <objective><!-- Tertiary objective --></objective>
+    </objectives>
+  </executive_summary>
+
+  <market_analysis>
+    <competitor_research>
+      <!-- Research similar services/solutions in the market -->
+      <competitor>
+        <name><!-- Competitor name --></name>
+        <description><!-- Brief description --></description>
+        <strengths>
+          <strength><!-- Key strength --></strength>
+        </strengths>
+        <weaknesses>
+          <weakness><!-- Key weakness --></weakness>
+        </weaknesses>
+      </competitor>
+    </competitor_research>
+    <market_opportunity>
+      <!-- Describe the market opportunity this service addresses -->
+    </market_opportunity>
+  </market_analysis>
+
+  <requirements>
+    <functional_requirements>
+      <!-- P0 = Critical, P1 = High, P2 = Medium, P3 = Low -->
+      <requirement id="FR001" priority="P0">
+        <title><!-- Requirement title --></title>
+        <description><!-- Detailed description --></description>
+        <acceptance_criteria>
+          <criterion><!-- Specific, testable criterion --></criterion>
+        </acceptance_criteria>
+      </requirement>
+    </functional_requirements>
+
+    <non_functional_requirements>
+      <requirement id="NFR001" priority="P0">
+        <title>Performance</title>
+        <description><!-- Performance requirements --></description>
+        <acceptance_criteria>
+          <criterion><!-- Response time, throughput, etc. --></criterion>
+        </acceptance_criteria>
+      </requirement>
+      <requirement id="NFR002" priority="P0">
+        <title>Security</title>
+        <description><!-- Security requirements --></description>
+        <acceptance_criteria>
+          <criterion><!-- Authentication, authorization, encryption --></criterion>
+        </acceptance_criteria>
+      </requirement>
+      <requirement id="NFR003" priority="P1">
+        <title>Scalability</title>
+        <description><!-- Scalability requirements --></description>
+        <acceptance_criteria>
+          <criterion><!-- Horizontal scaling, load handling --></criterion>
+        </acceptance_criteria>
+      </requirement>
+    </non_functional_requirements>
+  </requirements>
+
+  <technical_specifications>
+    <architecture>
+      <backend>
+        <!-- List backend technologies from project.tech_stack.backend -->
+        <framework>{{ project.tech_stack.backend | join(", ") }}</framework>
+      </backend>
+      <frontend>
+        <!-- List frontend technologies if applicable -->
+        <framework>{{ project.tech_stack.frontend | join(", ") }}</framework>
+      </frontend>
+      <infrastructure>
+        <!-- Deployment and infrastructure requirements -->
+        <container_orchestration>Kubernetes</container_orchestration>
+        <ci_cd>Automated deployment pipeline</ci_cd>
+      </infrastructure>
+    </architecture>
+  </technical_specifications>
+
+  <user_stories>
+    <story id="US001" points="0">
+      <title><!-- As a [role], I want [feature] so that [benefit] --></title>
+      <description><!-- Detailed story description --></description>
+      <acceptance_criteria>
+        <criterion><!-- Testable acceptance criterion --></criterion>
+      </acceptance_criteria>
+    </story>
+  </user_stories>
+
+  <timeline>
+    <phase name="Planning">
+      <duration><!-- e.g., 1 week --></duration>
+      <activities>
+        <activity>Finalize requirements</activity>
+        <activity>Design system architecture</activity>
+        <activity>Set up development environment</activity>
+      </activities>
+    </phase>
+    <phase name="Development">
+      <duration><!-- e.g., 4 weeks --></duration>
+      <activities>
+        <activity>Implement core functionality</activity>
+        <activity>Write unit tests</activity>
+        <activity>Integration testing</activity>
+      </activities>
+    </phase>
+    <phase name="Testing &amp; QA">
+      <duration><!-- e.g., 1 week --></duration>
+      <activities>
+        <activity>End-to-end testing</activity>
+        <activity>Security testing</activity>
+        <activity>Performance testing</activity>
+      </activities>
+    </phase>
+    <phase name="Deployment">
+      <duration><!-- e.g., 0.5 weeks --></duration>
+      <activities>
+        <activity>Deploy to staging</activity>
+        <activity>Production deployment</activity>
+        <activity>Monitoring setup</activity>
+      </activities>
+    </phase>
+  </timeline>
+
+  <success_metrics>
+    <metric>
+      <name><!-- Metric name --></name>
+      <target><!-- Target value --></target>
+      <measurement><!-- How to measure --></measurement>
+    </metric>
+  </success_metrics>
+
+  <risks>
+    <risk level="Low">
+      <description><!-- Risk description --></description>
+      <mitigation><!-- Mitigation strategy --></mitigation>
+    </risk>
+  </risks>
+
+  <linear_epic>
+    <title>{{ project.name }} Development</title>
+    <description>
+      {{ project.description }}
+
+      Key Objectives:
+      - <!-- Objective 1 -->
+      - <!-- Objective 2 -->
+
+      Success Criteria:
+      - <!-- Criterion 1 -->
+      - <!-- Criterion 2 -->
+    </description>
+  </linear_epic>
+</ProductRequirementDocument>
+

@@ -1,0 +1,106 @@
+# Sample .sdlc/config.yaml for target repositories
+#
+# Copy this file to your project's .sdlc/config.yaml directory
+# and customize for your project.
+#
+# The SDLC agents will use this configuration to understand your project
+# context and apply appropriate behaviors.
+
+# Project metadata
+project:
+  # Project name (displayed in dashboard and logs)
+  name: "My Project"
+  
+  # Project type determines which templates and defaults are used
+  # Options: microservice | frontend | monolith | data-pipeline
+  type: microservice
+  
+  # Brief description of what this project does
+  description: |
+    A brief description of your project and its purpose.
+    This helps agents understand context when generating code and documentation.
+
+# Technology stack - helps agents choose appropriate patterns and tools
+tech_stack:
+  # Backend technologies (if applicable)
+  backend:
+    - python
+    - fastapi
+    - postgresql
+    - redis
+  
+  # Frontend technologies (if applicable)
+  frontend:
+    - nextjs
+    - react
+    - tailwind
+    - typescript
+  
+  # Infrastructure/DevOps tools
+  infrastructure:
+    - docker
+    - kubernetes
+    - github-actions
+
+# Skills to auto-load for this project
+# These are loaded from agent-framework/agents/agent-skills/skills-hms/
+# Run `sdlc skills list` to see available skills
+skills:
+  - implementing-redis-production
+  - implementing-nextjs-14-production
+  - implementing-python-production
+
+# Agent-specific overrides for this project
+agents:
+  # Override default agent settings
+  productspec:
+    # Custom budget for this project
+    budget_usd: 5.0
+  
+  codecraft:
+    budget_usd: 10.0
+    # Task type hint for the agent
+    task_type: backend  # backend | frontend | data
+  
+  qualityguard:
+    budget_usd: 5.0
+    # Minimum test coverage target
+    coverage_target: 80
+
+# Integration configuration
+integrations:
+  # Linear integration for project management
+  linear:
+    enabled: false
+    team_id: ""  # Your Linear team ID
+    project_id: ""  # Linear project ID
+  
+  # GitHub integration
+  github:
+    enabled: true
+    # Repository is auto-detected from git remote
+    # Override if needed:
+    # owner: "your-org"
+    # repo: "your-repo"
+
+# Memory configuration
+memories:
+  # Where agent memories are stored (relative to .sdlc/)
+  path: memories/
+  
+  # Auto-save memories after agent runs
+  auto_save: true
+
+# Custom prompts directory (optional)
+# Place custom agent prompt overrides in this directory
+prompts_dir: prompts/
+
+# Environment-specific settings
+environments:
+  development:
+    api_base_url: "http://localhost:8000"
+  staging:
+    api_base_url: "https://staging.example.com"
+  production:
+    api_base_url: "https://api.example.com"
+

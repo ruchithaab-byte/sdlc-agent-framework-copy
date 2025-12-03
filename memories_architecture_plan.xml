@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<architecture_plan>
+    <metadata>
+        <service_name>authentication-microservice</service_name>
+        <version>1.0</version>
+        <created_date>2025-11-28</created_date>
+        <architect>Architecture Team</architect>
+        <status>approved</status>
+    </metadata>
+
+    <overview>
+        <description>
+            Centralized authentication microservice providing JWT-based authentication,
+            OAuth 2.0/OpenID Connect support, and role-based access control (RBAC)
+            capabilities for the organization's applications and services.
+        </description>
+        <architecture_pattern>Microservice</architecture_pattern>
+        <deployment_target>Kubernetes</deployment_target>
+    </overview>
+
+    <components>
+        <component>
+            <name>Authentication Controller</name>
+            <type>REST API</type>
+            <description>Handles login, registration, and token management endpoints</description>
+            <responsibilities>
+                <responsibility>User authentication</responsibility>
+                <responsibility>Token issuance</responsibility>
+                <responsibility>Token refresh</responsibility>
+            </responsibilities>
+        </component>
+
+        <component>
+            <name>Authorization Service</name>
+            <type>Service Layer</type>
+            <description>Implements RBAC and permission checking</description>
+            <responsibilities>
+                <responsibility>Role management</responsibility>
+                <responsibility>Permission validation</responsibility>
+                <responsibility>Resource-based access control</responsibility>
+            </responsibilities>
+        </component>
+
+        <component>
+            <name>User Management Service</name>
+            <type>Service Layer</type>
+            <description>Manages user lifecycle and profile data</description>
+            <responsibilities>
+                <responsibility>User registration</responsibility>
+                <responsibility>Profile management</responsibility>
+                <responsibility>Email verification</responsibility>
+            </responsibilities>
+        </component>
+
+        <component>
+            <name>Token Service</name>
+            <type>Service Layer</type>
+            <description>JWT token creation, validation, and management</description>
+            <responsibilities>
+                <responsibility>JWT signing</responsibility>
+                <responsibility>Token validation</responsibility>
+                <responsibility>Token refresh</responsibility>
+                <responsibility>Blacklist management</responsibility>
+            </responsibilities>
+        </component>
+
+        <component>
+            <name>OAuth Provider</name>
+            <type>OAuth 2.0 Server</type>
+            <description>OAuth 2.0/OpenID Connect implementation</description>
+            <responsibilities>
+                <responsibility>OAuth flows</responsibility>
+                <responsibility>Client management</responsibility>
+                <responsibility>Authorization code exchange</responsibility>
+            </responsibilities>
+        </component>
+
+        <component>
+            <name>MFA Service</name>
+            <type>Service Layer</type>
+            <description>Multi-factor authentication implementation</description>
+            <responsibilities>
+                <responsibility>TOTP generation</responsibility>
+                <responsibility>SMS verification</responsibility>
+                <responsibility>Backup codes</responsibility>
+            </responsibilities>
+        </component>
+
+        <component>
+            <name>Audit Logger</name>
+            <type>Cross-cutting Service</type>
+            <description>Security event logging and compliance tracking</description>
+            <responsibilities>
+                <responsibility>Authentication events</responsibility>
+                <responsibility>Authorization events</responsibility>
+                <responsibility>Compliance reporting</responsibility>
+            </responsibilities>
+        </component>
+    </components>
+
+    <apis>
+        <api>
+            <endpoint>/auth/login</endpoint>
+            <method>POST</method>
+            <description>User authentication with credentials</description>
+            <input>
+                <field name="email" type="string" required="true"/>
+                <field name="password" type="string" required="true"/>
+                <field name="mfa_code" type="string" required="false"/>
+            </input>
+            <output>
+                <field name="access_token" type="string"/>
+                <field name="refresh_token" type="string"/>
+                <field name="expires_in" type="number"/>
+            </output>
+        </api>
+
+        <api>
+            <endpoint>/auth/register</endpoint>
+            <method>POST</method>
+            <description>User registration with email verification</description>
+            <input>
+                <field name="email" type="string" required="true"/>
+                <field name="password" type="string" required="true"/>
+                <field name="profile" type="object" required="true"/>
+            </input>
+            <output>
+                <field name="user_id" type="string"/>
+                <field name="verification_required" type="boolean"/>
+            </output>
+        </api>
+
+        <api>
+            <endpoint>/auth/token/refresh</endpoint>
+            <method>POST</method>
+            <description>Refresh access token using refresh token</description>
+            <input>
+                <field name="refresh_token" type="string" required="true"/>
+            </input>
+            <output>
+                <field name="access_token" type="string"/>
+                <field name="expires_in" type="number"/>
+            </output>
+        </api>
+
+        <api>
+            <endpoint>/auth/token/validate</endpoint>
+            <method>POST</method>
+            <description>Validate JWT token for other services</description>
+            <input>
+                <field name="token" type="string" required="true"/>
+            </input>
+            <output>
+                <field name="valid" type="boolean"/>
+                <field name="user_id" type="string"/>
+                <field name="roles" type="array"/>
+                <field name="permissions" type="array"/>
+            </output>
+        </api>
+
+        <api>
+            <endpoint>/oauth/authorize</endpoint>
+            <method>GET</method>
+            <description>OAuth 2.0 authorization endpoint</description>
+            <input>
+                <field name="client_id" type="string" required="true"/>
+                <field name="response_type" type="string" required="true"/>
+                <field name="scope" type="string" required="true"/>
+                <field name="redirect_uri" type="string" required="true"/>
+            </input>
+            <output>authorization_code or access_token</output>
+        </api>
+
+        <api>
+            <endpoint>/oauth/token</endpoint>
+            <method>POST</method>
+            <description>OAuth 2.0 token exchange</description>
+            <input>
+                <field name="grant_type" type="string" required="true"/>
+                <field name="code" type="string" required="true"/>
+                <field name="client_id" type="string" required="true"/>
+                <field name="client_secret" type="string" required="true"/>
+            </input>
+            <output>
+                <field name="access_token" type="string"/>
+                <field name="token_type" type="string"/>
+                <field name="expires_in" type="number"/>
+            </output>
+        </api>
+    </apis>
+
+    <data_models>
+        <model name="User">
+            <field name="user_id" type="UUID" constraints="primary key"/>
+            <field name="email" type="string" constraints="unique"/>
+            <field name="password_hash" type="string"/>
+            <field name="email_verified" type="boolean"/>
+            <field name="created_at" type="timestamp"/>
+            <field name="updated_at" type="timestamp"/>
+            <field name="last_login" type="timestamp"/>
+            <field name="status" type="enum" values="active,inactive,suspended"/>
+        </model>
+
+        <model name="UserProfile">
+            <field name="user_id" type="UUID" constraints="foreign key"/>
+            <field name="first_name" type="string"/>
+            <field name="last_name" type="string"/>
+            <field name="phone" type="string"/>
+            <field name="preferences" type="json"/>
+        </model>
+
+        <model name="Role">
+            <field name="role_id" type="UUID" constraints="primary key"/>
+            <field name="name" type="string" constraints="unique"/>
+            <field name="description" type="string"/>
+            <field name="permissions" type="json array"/>
+        </model>
+
+        <model name="UserRole">
+            <field name="user_id" type="UUID" constraints="foreign key"/>
+            <field name="role_id" type="UUID" constraints="foreign key"/>
+            <field name="assigned_at" type="timestamp"/>
+            <field name="assigned_by" type="UUID"/>
+        </model>
+
+        <model name="TokenBlacklist">
+            <field name="jti" type="string" constraints="primary key"/>
+            <field name="user_id" type="UUID"/>
+            <field name="blacklisted_at" type="timestamp"/>
+            <field name="expires_at" type="timestamp"/>
+        </model>
+
+        <model name="OAuthClient">
+            <field name="client_id" type="string" constraints="primary key"/>
+            <field name="client_secret" type="string"/>
+            <field name="name" type="string"/>
+            <field name="redirect_uris" type="json array"/>
+            <field name="scopes" type="json array"/>
+            <field name="grant_types" type="json array"/>
+        </model>
+
+        <model name="AuditLog">
+            <field name="log_id" type="UUID" constraints="primary key"/>
+            <field name="user_id" type="UUID"/>
+            <field name="action" type="string"/>
+            <field name="resource" type="string"/>
+            <field name="timestamp" type="timestamp"/>
+            <field name="ip_address" type="string"/>
+            <field name="user_agent" type="string"/>
+            <field name="result" type="enum" values="success,failure"/>
+        </model>
+    </data_models>
+
+    <security>
+        <authentication>
+            <primary_method>JWT with RS256 signing</primary_method>
+            <token_expiry>
+                <access_token>15 minutes</access_token>
+                <refresh_token>30 days</refresh_token>
+            </token_expiry>
+            <key_rotation>Automated daily rotation</key_rotation>
+        </authentication>
+
+        <password_policy>
+            <min_length>12</min_length>
+            <complexity>uppercase, lowercase, numbers, special chars</complexity>
+            <history>prevent reuse of last 12 passwords</history>
+            <max_age>90 days</max_age>
+        </password_policy>
+
+        <rate_limiting>
+            <login_attempts>5 per minute per IP</login_attempts>
+            <token_requests>100 per minute per client</token_requests>
+            <registration>3 per hour per IP</registration>
+        </rate_limiting>
+
+        <encryption>
+            <at_rest>AES-256-GCM</at_rest>
+            <in_transit>TLS 1.3</in_transit>
+            <password_hashing>Argon2id</password_hashing>
+        </encryption>
+
+        <compliance>
+            <standard>GDPR</standard>
+            <standard>SOC 2 Type II</standard>
+            <standard>OWASP Top 10</standard>
+        </compliance>
+    </security>
+
+    <deployment>
+        <architecture>Microservice</architecture>
+        <containerization>Docker with distroless base images</containerization>
+        <orchestration>Kubernetes</orchestration>
+
+        <scaling>
+            <type>horizontal</type>
+            <strategy>Auto-scaling based on CPU/memory</strategy>
+            <target_replicas>3-10 pods</target_replicas>
+            <load_balancer>Service mesh (Istio)</load_balancer>
+        </scaling>
+
+        <persistence>
+            <primary_db>PostgreSQL cluster</primary_db>
+            <cache>Redis cluster</cache>
+            <backup>Automated daily snapshots</backup>
+        </persistence>
+
+        <observability>
+            <metrics>Prometheus + Grafana</metrics>
+            <logging>ELK Stack</logging>
+            <tracing>Jaeger</tracing>
+            <health_checks>Kubernetes probes</health_checks>
+        </observability>
+
+        <networking>
+            <ingress>API Gateway (Kong/Ambassador)</ingress>
+            <service_mesh>Istio for inter-service communication</service_mesh>
+            <dns>Kubernetes DNS</dns>
+        </networking>
+    </deployment>
+
+    <integration_dependencies>
+        <dependency>
+            <service>api-gateway</service>
+            <type>upstream</type>
+            <description>Authentication service registration as upstream</description>
+            <requirements>
+                <requirement>Health check endpoints</requirement>
+                <requirement>Load balancing strategy</requirement>
+                <requirement>Rate limiting rules</requirement>
+            </requirements>
+        </dependency>
+
+        <dependency>
+            <service>user-service</service>
+            <type>integration</type>
+            <description>User profile data synchronization</description>
+            <requirements>
+                <requirement>User data synchronization strategy</requirement>
+                <requirement>Profile update notifications</requirement>
+            </requirements>
+        </dependency>
+
+        <dependency>
+            <service>notification-service</service>
+            <type>downstream</type>
+            <description>Email verification and MFA SMS delivery</description>
+            <requirements>
+                <requirement>Email template registration</requirement>
+                <requirement>SMS delivery configuration</requirement>
+            </requirements>
+        </dependency>
+
+        <dependency>
+            <service>audit-service</service>
+            <type>downstream</type>
+            <description>Authentication and authorization event logging</description>
+            <requirements>
+                <requirement>Event schema registration</requirement>
+                <requirement>Audit event routing</requirement>
+            </requirements>
+        </dependency>
+    </integration_dependencies>
+
+    <performance_targets>
+        <target>
+            <metric>Concurrent users</metric>
+            <value>10,000</value>
+        </target>
+        <target>
+            <metric>Authentication requests per minute</metric>
+            <value>100,000</value>
+        </target>
+        <target>
+            <metric>Token validation response time</metric>
+            <value>&lt; 50ms</value>
+        </target>
+        <target>
+            <metric>Login response time</metric>
+            <value>&lt; 200ms</value>
+        </target>
+        <target>
+            <metric>Uptime</metric>
+            <value>99.9%</value>
+        </target>
+    </performance_targets>
+
+    <implementation_phases>
+        <phase number="1">
+            <name>Core Authentication</name>
+            <description>Basic authentication, JWT tokens, RBAC</description>
+            <components>
+                <component>Authentication Controller</component>
+                <component>Token Service</component>
+                <component>User Management Service</component>
+                <component>Authorization Service</component>
+            </components>
+        </phase>
+
+        <phase number="2">
+            <name>OAuth 2.0 Implementation</name>
+            <description>OAuth server and third-party integrations</description>
+            <components>
+                <component>OAuth Provider</component>
+            </components>
+        </phase>
+
+        <phase number="3">
+            <name>Advanced Features</name>
+            <description>MFA, advanced audit logging, compliance</description>
+            <components>
+                <component>MFA Service</component>
+                <component>Audit Logger</component>
+            </components>
+        </phase>
+    </implementation_phases>
+</architecture_plan>

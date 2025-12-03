@@ -1,0 +1,57 @@
+// Multi-Datasource Flyway Configuration Template
+// Use when managing multiple isolated databases with independent migration lifecycles
+// Disable auto-configuration: spring.flyway.enabled=false
+
+package com.example.config;
+
+import org.flywaydb.core.Flyway;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import javax.sql.DataSource;
+
+@Configuration
+public class FlywayMultiSourceConfig {
+    
+    // Assumption: DataSource beans 'primaryDataSource' and 'secondaryDataSource'
+    // are defined elsewhere (typically via @ConfigurationProperties)
+    
+    /**
+     * Primary Flyway instance for main database
+     * Migrations located in: src/main/resources/db/migration/primary/
+     */
+    @Bean(name = "primaryFlyway")
+    @Primary
+    public Flyway primaryFlyway(@Qualifier("primaryDataSource") DataSource dataSource) {
+        return Flyway.configure()
+               .dataSource(dataSource)
+               .locations("classpath:db/migration/primary")  // Isolated location
+               .table("flyway_schema_history")  // Default history table
+               .baselineOnMigrate(false)
+               .load();
+    }
+    
+    /**
+     * Secondary Flyway instance for audit/log database
+     * Migrations located in: src/main/resources/db/migration/secondary/
+     */
+    @Bean(name = "secondaryFlyway")
+    public Flyway secondaryFlyway(@Qualifier("secondaryDataSource") DataSource dataSource) {
+        return Flyway.configure()
+               .dataSource(dataSource)
+               .locations("classpath:db/migration/secondary")  // Isolated location
+               .table("secondary_schema_history")  // Dedicated history table
+               .baselineOnMigrate(true)  // If secondary DB already exists
+               .load();
+    }
+    
+    // Optional: Initialize migrations on startup
+    // @PostConstruct
+    // public void migrate() {
+    //     primaryFlyway(primaryDataSource).migrate();
+    //     secondaryFlyway(secondaryDataSource).migrate();
+    // }
+}
+

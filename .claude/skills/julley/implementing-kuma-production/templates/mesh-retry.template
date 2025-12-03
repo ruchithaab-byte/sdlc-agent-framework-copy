@@ -1,0 +1,27 @@
+apiVersion: kuma.io/v1alpha1
+kind: MeshRetry
+metadata:
+  name: web-to-backend-retry-http
+  namespace: web-app-ns
+  labels:
+    kuma.io/policy-role: workload-owner
+    kuma.io/mesh: default
+spec:
+  targetRef:
+    kind: Dataplane
+    labels:
+      app: web-app
+  to:
+    - targetRef:
+        kind: MeshService
+        name: backend_svc_8080
+      default:
+        http:
+          numRetries: 3
+          backOff:
+            baseInterval: 25ms
+            maxInterval: 5s
+          retryOn:
+            - 5xx
+            - gateway-error
+

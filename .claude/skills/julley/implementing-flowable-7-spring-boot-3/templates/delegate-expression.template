@@ -1,0 +1,47 @@
+<!-- Delegate Expression Pattern: Spring Bean with Dependency Injection -->
+<!-- Java Delegate Implementation -->
+
+package com.example.flowable;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.flowable.engine.delegate.JavaDelegate;
+import org.flowable.engine.delegate.DelegateExecution;
+
+@Component("myServiceTask")
+public class MyServiceTask implements JavaDelegate {
+    
+    // Spring-managed dependency injection
+    @Autowired
+    private ExternalService externalService;
+    
+    @Autowired
+    private BusinessRepository businessRepository;
+    
+    @Override
+    public void execute(DelegateExecution execution) {
+        // Access process variables
+        String orderId = (String) execution.getVariable("orderId");
+        
+        // Use injected services
+        BusinessEntity entity = businessRepository.findById(orderId);
+        String result = externalService.process(entity);
+        
+        // Set process variables
+        execution.setVariable("result", result);
+    }
+}
+
+<!-- BPMN 2.0 XML Usage -->
+<!--
+<serviceTask id="processOrder" 
+             name="Process Order"
+             flowable:delegateExpression="${myServiceTask}"/>
+-->
+
+<!-- Key Points: -->
+<!-- 1. Delegate must be annotated with @Component or @Service -->
+<!-- 2. Bean name matches delegateExpression value: ${myServiceTask} -->
+<!-- 3. @Autowired enables dependency injection -->
+<!-- 4. DO NOT use deprecated flowable:class attribute -->
+

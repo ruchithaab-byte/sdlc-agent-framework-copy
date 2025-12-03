@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PRD Template for Monolith Projects
+  
+  Usage: Copy this template to your target project's .sdlc/memories/prd.xml
+  and fill in the placeholders marked with {{ variable_name }}.
+-->
+<ProductRequirementDocument>
+  <metadata>
+    <title>{{ project.name }} PRD</title>
+    <version>1.0</version>
+    <created_date>{{ date }}</created_date>
+    <author>{{ author }}</author>
+    <status>Draft</status>
+    <project_type>monolith</project_type>
+  </metadata>
+
+  <executive_summary>
+    <overview>{{ project.description }}</overview>
+    <objectives>
+      <objective>Build a cohesive, maintainable application</objective>
+      <objective>Deliver end-to-end functionality</objective>
+      <objective>Ensure straightforward deployment and operations</objective>
+    </objectives>
+  </executive_summary>
+
+  <requirements>
+    <functional_requirements>
+      <requirement id="FR001" priority="P0">
+        <title><!-- Requirement title --></title>
+        <description><!-- Detailed description --></description>
+        <acceptance_criteria>
+          <criterion><!-- Specific, testable criterion --></criterion>
+        </acceptance_criteria>
+      </requirement>
+    </functional_requirements>
+
+    <non_functional_requirements>
+      <requirement id="NFR001" priority="P0">
+        <title>Performance</title>
+        <description>Response time and throughput targets</description>
+        <acceptance_criteria>
+          <criterion>API response time under 200ms (p95)</criterion>
+          <criterion>Support 1000 concurrent users</criterion>
+        </acceptance_criteria>
+      </requirement>
+      <requirement id="NFR002" priority="P0">
+        <title>Security</title>
+        <description>Security requirements</description>
+        <acceptance_criteria>
+          <criterion>OWASP Top 10 compliance</criterion>
+          <criterion>Secure authentication and authorization</criterion>
+          <criterion>Data encryption at rest and in transit</criterion>
+        </acceptance_criteria>
+      </requirement>
+      <requirement id="NFR003" priority="P1">
+        <title>Maintainability</title>
+        <description>Code quality and maintainability</description>
+        <acceptance_criteria>
+          <criterion>Modular architecture with clear boundaries</criterion>
+          <criterion>Test coverage minimum 80%</criterion>
+          <criterion>Documentation for all public APIs</criterion>
+        </acceptance_criteria>
+      </requirement>
+    </non_functional_requirements>
+  </requirements>
+
+  <technical_specifications>
+    <architecture>
+      <pattern>Layered Monolith</pattern>
+      <layers>
+        <layer name="Presentation">
+          <description>Web UI and API controllers</description>
+          <technologies>{{ project.tech_stack.frontend | join(", ") }}</technologies>
+        </layer>
+        <layer name="Business">
+          <description>Business logic and services</description>
+          <technologies>{{ project.tech_stack.backend | join(", ") }}</technologies>
+        </layer>
+        <layer name="Data">
+          <description>Data access and persistence</description>
+          <technologies><!-- ORM, Database --></technologies>
+        </layer>
+      </layers>
+      <database>
+        <type><!-- PostgreSQL, MySQL, etc. --></type>
+        <orm><!-- SQLAlchemy, Prisma, etc. --></orm>
+      </database>
+      <infrastructure>
+        <hosting><!-- Cloud provider or on-premise --></hosting>
+        <ci_cd>GitHub Actions</ci_cd>
+      </infrastructure>
+    </architecture>
+  </technical_specifications>
+
+  <modules>
+    <module id="M001">
+      <name><!-- Module name --></name>
+      <description><!-- Module purpose --></description>
+      <dependencies><!-- Other module IDs --></dependencies>
+      <features>
+        <feature><!-- Feature within this module --></feature>
+      </features>
+    </module>
+  </modules>
+
+  <user_stories>
+    <story id="US001" points="0">
+      <title><!-- As a [role], I want [feature] so that [benefit] --></title>
+      <description><!-- Detailed story description --></description>
+      <acceptance_criteria>
+        <criterion><!-- Testable acceptance criterion --></criterion>
+      </acceptance_criteria>
+    </story>
+  </user_stories>
+
+  <timeline>
+    <phase name="Foundation">
+      <duration>1 week</duration>
+      <activities>
+        <activity>Project setup and configuration</activity>
+        <activity>Database schema design</activity>
+        <activity>Core architecture scaffolding</activity>
+      </activities>
+    </phase>
+    <phase name="Core Development">
+      <duration>4 weeks</duration>
+      <activities>
+        <activity>Implement core modules</activity>
+        <activity>Build API layer</activity>
+        <activity>Develop UI components</activity>
+      </activities>
+    </phase>
+    <phase name="Integration">
+      <duration>1 week</duration>
+      <activities>
+        <activity>Module integration</activity>
+        <activity>End-to-end testing</activity>
+        <activity>Performance optimization</activity>
+      </activities>
+    </phase>
+    <phase name="Deployment">
+      <duration>0.5 weeks</duration>
+      <activities>
+        <activity>Production environment setup</activity>
+        <activity>Deployment and monitoring</activity>
+        <activity>Documentation finalization</activity>
+      </activities>
+    </phase>
+  </timeline>
+
+  <success_metrics>
+    <metric>
+      <name>System Uptime</name>
+      <target>99.5%</target>
+      <measurement>Monitoring dashboard</measurement>
+    </metric>
+    <metric>
+      <name>Response Time</name>
+      <target>Under 200ms (p95)</target>
+      <measurement>APM tools</measurement>
+    </metric>
+  </success_metrics>
+</ProductRequirementDocument>
+

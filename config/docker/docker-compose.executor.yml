@@ -1,0 +1,65 @@
+# Docker Compose for SDLC Agent Executors
+#
+# Provides isolated execution environments for agent operations.
+# Follows Docker MCP Toolkit security patterns.
+
+version: '3.8'
+
+services:
+  # Python executor for general code execution
+  python-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.executor
+    container_name: sdlc-python-executor
+    # Security constraints
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    # Network isolation (default: none for security)
+    network_mode: none
+    # Volumes - workspace only, read-write
+    volumes:
+      - workspace:/workspace:rw
+    # Keep running
+    stdin_open: true
+    tty: true
+
+  # Research executor - more resources for analysis
+  research-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.executor
+    container_name: sdlc-research-executor
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    network_mode: none
+    volumes:
+      - workspace:/workspace:rw
+    stdin_open: true
+    tty: true
+
+volumes:
+  workspace:
+    driver: local
+

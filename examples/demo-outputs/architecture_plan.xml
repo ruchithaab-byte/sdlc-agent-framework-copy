@@ -1,0 +1,623 @@
+<?xml version="1.0" ?>
+<architecture_plan version="1.0" service="authentication-microservice">
+  <metadata>
+    <created_at>2024-01-10</created_at>
+    <author>Architecture Team</author>
+    <description>Authentication microservice architecture for Todo application</description>
+  </metadata>
+  <service>authentication-microservice</service>
+  <components>
+    <component>
+      <name>Auth API Gateway</name>
+      <type>API Gateway</type>
+      <description>Entry point for all authentication requests with rate limiting and request validation</description>
+      <technologies>Kong</technologies>
+      <technologies>Spring Cloud Gateway</technologies>
+      <responsibilities>Request routing and load balancing</responsibilities>
+      <responsibilities>Rate limiting per client/IP</responsibilities>
+      <responsibilities>Request/Response transformation</responsibilities>
+      <responsibilities>API versioning support</responsibilities>
+    </component>
+    <component>
+      <name>Authentication Service</name>
+      <type>Core Service</type>
+      <description>Main authentication service handling user authentication flows</description>
+      <technologies>Spring Boot</technologies>
+      <technologies>Java 17</technologies>
+      <responsibilities>User login/logout</responsibilities>
+      <responsibilities>JWT token generation and validation</responsibilities>
+      <responsibilities>OAuth2/OpenID Connect flows</responsibilities>
+      <responsibilities>Multi-factor authentication (MFA)</responsibilities>
+      <responsibilities>Session management</responsibilities>
+    </component>
+    <component>
+      <name>User Management Service</name>
+      <type>Core Service</type>
+      <description>Service for user account management and profile operations</description>
+      <technologies>Spring Boot</technologies>
+      <technologies>Java 17</technologies>
+      <responsibilities>User registration</responsibilities>
+      <responsibilities>Profile management</responsibilities>
+      <responsibilities>Password reset flows</responsibilities>
+      <responsibilities>Email verification</responsibilities>
+      <responsibilities>Account deactivation/deletion</responsibilities>
+    </component>
+    <component>
+      <name>Token Service</name>
+      <type>Core Service</type>
+      <description>Dedicated service for token lifecycle management</description>
+      <technologies>Spring Boot</technologies>
+      <technologies>Java 17</technologies>
+      <responsibilities>Token generation (access/refresh)</responsibilities>
+      <responsibilities>Token validation and introspection</responsibilities>
+      <responsibilities>Token revocation</responsibilities>
+      <responsibilities>Token rotation strategies</responsibilities>
+    </component>
+    <component>
+      <name>Authorization Service</name>
+      <type>Core Service</type>
+      <description>Fine-grained authorization and permission management</description>
+      <technologies>Spring Boot</technologies>
+      <technologies>OPA (Open Policy Agent)</technologies>
+      <responsibilities>Role-based access control (RBAC)</responsibilities>
+      <responsibilities>Permission management</responsibilities>
+      <responsibilities>Policy enforcement</responsibilities>
+      <responsibilities>Team/organization hierarchy support</responsibilities>
+    </component>
+    <component>
+      <name>Audit Service</name>
+      <type>Supporting Service</type>
+      <description>Security audit logging and compliance tracking</description>
+      <technologies>Spring Boot</technologies>
+      <technologies>Elasticsearch</technologies>
+      <responsibilities>Authentication event logging</responsibilities>
+      <responsibilities>Security audit trails</responsibilities>
+      <responsibilities>Compliance reporting</responsibilities>
+      <responsibilities>Anomaly detection</responsibilities>
+    </component>
+    <component>
+      <name>Notification Service</name>
+      <type>Supporting Service</type>
+      <description>Multi-channel notification delivery for auth events</description>
+      <technologies>Spring Boot</technologies>
+      <technologies>AWS SNS/SES</technologies>
+      <responsibilities>Email notifications</responsibilities>
+      <responsibilities>SMS for MFA</responsibilities>
+      <responsibilities>Push notifications</responsibilities>
+      <responsibilities>Security alerts</responsibilities>
+    </component>
+  </components>
+  <apis>
+    <api>
+      <name>Public Auth API</name>
+      <type>REST</type>
+      <version>v1</version>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/register</path>
+        <description>User registration</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/login</path>
+        <description>User login</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/logout</path>
+        <description>User logout</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/refresh</path>
+        <description>Refresh access token</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/forgot-password</path>
+        <description>Initiate password reset</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/reset-password</path>
+        <description>Complete password reset</description>
+      </endpoints>
+      <endpoints>
+        <method>GET</method>
+        <path>/api/v1/auth/verify-email</path>
+        <description>Verify email address</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/mfa/setup</path>
+        <description>Setup MFA</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/auth/mfa/verify</path>
+        <description>Verify MFA code</description>
+      </endpoints>
+      <endpoints>
+        <method>GET</method>
+        <path>/api/v1/auth/oauth/{provider}/authorize</path>
+        <description>OAuth authorization</description>
+      </endpoints>
+      <endpoints>
+        <method>GET</method>
+        <path>/api/v1/auth/oauth/{provider}/callback</path>
+        <description>OAuth callback</description>
+      </endpoints>
+    </api>
+    <api>
+      <name>Internal Auth API</name>
+      <type>gRPC</type>
+      <version>v1</version>
+      <services>
+        <name>TokenValidation</name>
+        <methods>ValidateToken</methods>
+        <methods>IntrospectToken</methods>
+        <methods>GetTokenClaims</methods>
+      </services>
+      <services>
+        <name>UserAuthorization</name>
+        <methods>CheckPermission</methods>
+        <methods>GetUserRoles</methods>
+        <methods>GetEffectivePermissions</methods>
+      </services>
+      <services>
+        <name>ServiceAuthentication</name>
+        <methods>AuthenticateService</methods>
+        <methods>RotateServiceCredentials</methods>
+      </services>
+    </api>
+    <api>
+      <name>Admin API</name>
+      <type>REST</type>
+      <version>v1</version>
+      <endpoints>
+        <method>GET</method>
+        <path>/api/v1/admin/users</path>
+        <description>List users with pagination</description>
+      </endpoints>
+      <endpoints>
+        <method>GET</method>
+        <path>/api/v1/admin/users/{id}</path>
+        <description>Get user details</description>
+      </endpoints>
+      <endpoints>
+        <method>PUT</method>
+        <path>/api/v1/admin/users/{id}</path>
+        <description>Update user</description>
+      </endpoints>
+      <endpoints>
+        <method>DELETE</method>
+        <path>/api/v1/admin/users/{id}</path>
+        <description>Delete user</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/admin/users/{id}/lock</path>
+        <description>Lock user account</description>
+      </endpoints>
+      <endpoints>
+        <method>POST</method>
+        <path>/api/v1/admin/users/{id}/unlock</path>
+        <description>Unlock user account</description>
+      </endpoints>
+      <endpoints>
+        <method>GET</method>
+        <path>/api/v1/admin/audit-logs</path>
+        <description>View audit logs</description>
+      </endpoints>
+      <endpoints>
+        <method>GET</method>
+        <path>/api/v1/admin/sessions</path>
+        <description>Active sessions</description>
+      </endpoints>
+      <endpoints>
+        <method>DELETE</method>
+        <path>/api/v1/admin/sessions/{id}</path>
+        <description>Terminate session</description>
+      </endpoints>
+    </api>
+  </apis>
+  <data_models>
+    <data_model>
+      <name>User</name>
+      <type>Entity</type>
+      <attributes>
+        <name>id</name>
+        <type>UUID</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>email</name>
+        <type>String</type>
+        <required>True</required>
+        <unique>True</unique>
+      </attributes>
+      <attributes>
+        <name>username</name>
+        <type>String</type>
+        <required>True</required>
+        <unique>True</unique>
+      </attributes>
+      <attributes>
+        <name>password_hash</name>
+        <type>String</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>first_name</name>
+        <type>String</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>last_name</name>
+        <type>String</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>phone_number</name>
+        <type>String</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>email_verified</name>
+        <type>Boolean</type>
+        <required>True</required>
+        <default>False</default>
+      </attributes>
+      <attributes>
+        <name>mfa_enabled</name>
+        <type>Boolean</type>
+        <required>True</required>
+        <default>False</default>
+      </attributes>
+      <attributes>
+        <name>mfa_secret</name>
+        <type>String</type>
+        <required>False</required>
+        <encrypted>True</encrypted>
+      </attributes>
+      <attributes>
+        <name>status</name>
+        <type>Enum</type>
+        <values>ACTIVE</values>
+        <values>LOCKED</values>
+        <values>SUSPENDED</values>
+        <values>DELETED</values>
+      </attributes>
+      <attributes>
+        <name>created_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>updated_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>last_login_at</name>
+        <type>Timestamp</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>password_changed_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+    </data_model>
+    <data_model>
+      <name>Session</name>
+      <type>Entity</type>
+      <attributes>
+        <name>id</name>
+        <type>UUID</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>user_id</name>
+        <type>UUID</type>
+        <required>True</required>
+        <foreign_key>User.id</foreign_key>
+      </attributes>
+      <attributes>
+        <name>token_hash</name>
+        <type>String</type>
+        <required>True</required>
+        <indexed>True</indexed>
+      </attributes>
+      <attributes>
+        <name>device_info</name>
+        <type>JSON</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>ip_address</name>
+        <type>String</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>user_agent</name>
+        <type>String</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>created_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>expires_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>last_accessed_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>revoked</name>
+        <type>Boolean</type>
+        <required>True</required>
+        <default>False</default>
+      </attributes>
+    </data_model>
+    <data_model>
+      <name>RefreshToken</name>
+      <type>Entity</type>
+      <attributes>
+        <name>id</name>
+        <type>UUID</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>user_id</name>
+        <type>UUID</type>
+        <required>True</required>
+        <foreign_key>User.id</foreign_key>
+      </attributes>
+      <attributes>
+        <name>token_hash</name>
+        <type>String</type>
+        <required>True</required>
+        <unique>True</unique>
+      </attributes>
+      <attributes>
+        <name>family_id</name>
+        <type>UUID</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>created_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>expires_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>used_at</name>
+        <type>Timestamp</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>revoked</name>
+        <type>Boolean</type>
+        <required>True</required>
+        <default>False</default>
+      </attributes>
+    </data_model>
+    <data_model>
+      <name>Role</name>
+      <type>Entity</type>
+      <attributes>
+        <name>id</name>
+        <type>UUID</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>name</name>
+        <type>String</type>
+        <required>True</required>
+        <unique>True</unique>
+      </attributes>
+      <attributes>
+        <name>description</name>
+        <type>String</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>permissions</name>
+        <type>JSON</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>is_system</name>
+        <type>Boolean</type>
+        <required>True</required>
+        <default>False</default>
+      </attributes>
+      <attributes>
+        <name>created_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+    </data_model>
+    <data_model>
+      <name>UserRole</name>
+      <type>Entity</type>
+      <attributes>
+        <name>user_id</name>
+        <type>UUID</type>
+        <required>True</required>
+        <foreign_key>User.id</foreign_key>
+      </attributes>
+      <attributes>
+        <name>role_id</name>
+        <type>UUID</type>
+        <required>True</required>
+        <foreign_key>Role.id</foreign_key>
+      </attributes>
+      <attributes>
+        <name>organization_id</name>
+        <type>UUID</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>assigned_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>assigned_by</name>
+        <type>UUID</type>
+        <required>True</required>
+      </attributes>
+    </data_model>
+    <data_model>
+      <name>AuditLog</name>
+      <type>Entity</type>
+      <attributes>
+        <name>id</name>
+        <type>UUID</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>user_id</name>
+        <type>UUID</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>action</name>
+        <type>String</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>resource_type</name>
+        <type>String</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>resource_id</name>
+        <type>String</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>ip_address</name>
+        <type>String</type>
+        <required>True</required>
+      </attributes>
+      <attributes>
+        <name>user_agent</name>
+        <type>String</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>result</name>
+        <type>Enum</type>
+        <values>SUCCESS</values>
+        <values>FAILURE</values>
+        <values>ERROR</values>
+      </attributes>
+      <attributes>
+        <name>metadata</name>
+        <type>JSON</type>
+        <required>False</required>
+      </attributes>
+      <attributes>
+        <name>created_at</name>
+        <type>Timestamp</type>
+        <required>True</required>
+      </attributes>
+    </data_model>
+  </data_models>
+  <security>
+    <authentication_methods>Username/Password with bcrypt hashing</authentication_methods>
+    <authentication_methods>OAuth2/OpenID Connect (Google, Microsoft, GitHub)</authentication_methods>
+    <authentication_methods>Multi-factor authentication (TOTP)</authentication_methods>
+    <authentication_methods>API Key authentication for service-to-service</authentication_methods>
+    <token_strategy>
+      <access_token>
+        <type>JWT</type>
+        <algorithm>RS256</algorithm>
+        <expiry>15 minutes</expiry>
+        <claims>sub</claims>
+        <claims>email</claims>
+        <claims>roles</claims>
+        <claims>permissions</claims>
+        <claims>iat</claims>
+        <claims>exp</claims>
+        <claims>jti</claims>
+      </access_token>
+      <refresh_token>
+        <type>Opaque</type>
+        <storage>Database with hash</storage>
+        <expiry>30 days</expiry>
+        <rotation>Automatic on use</rotation>
+      </refresh_token>
+    </token_strategy>
+    <encryption>
+      <at_rest>AES-256-GCM for sensitive data</at_rest>
+      <in_transit>TLS 1.3 minimum</in_transit>
+      <key_management>AWS KMS or HashiCorp Vault</key_management>
+    </encryption>
+    <security_headers>Strict-Transport-Security</security_headers>
+    <security_headers>X-Content-Type-Options</security_headers>
+    <security_headers>X-Frame-Options</security_headers>
+    <security_headers>Content-Security-Policy</security_headers>
+    <security_headers>X-XSS-Protection</security_headers>
+    <rate_limiting>
+      <login_attempts>5 per 15 minutes per IP</login_attempts>
+      <api_requests>1000 per hour per user</api_requests>
+      <registration>10 per hour per IP</registration>
+    </rate_limiting>
+  </security>
+  <deployment>
+    <architecture_style>Microservices</architecture_style>
+    <container_orchestration>Kubernetes</container_orchestration>
+    <service_mesh>Istio</service_mesh>
+    <databases>
+      <primary>
+        <type>PostgreSQL</type>
+        <version>14+</version>
+        <replication>Master-slave with automatic failover</replication>
+        <backup>Daily with 30-day retention</backup>
+      </primary>
+      <cache>
+        <type>Redis</type>
+        <version>7+</version>
+        <usage>Session storage</usage>
+        <usage>Rate limiting</usage>
+        <usage>Token blacklist</usage>
+      </cache>
+    </databases>
+    <message_queue>
+      <type>RabbitMQ or AWS SQS</type>
+      <usage>Async notifications</usage>
+      <usage>Audit events</usage>
+      <usage>Inter-service communication</usage>
+    </message_queue>
+    <monitoring>
+      <metrics>Prometheus + Grafana</metrics>
+      <logging>ELK Stack (Elasticsearch, Logstash, Kibana)</logging>
+      <tracing>Jaeger or AWS X-Ray</tracing>
+      <alerting>PagerDuty integration</alerting>
+    </monitoring>
+    <scaling>
+      <horizontal_scaling>Auto-scaling based on CPU/memory</horizontal_scaling>
+      <load_balancing>Round-robin with health checks</load_balancing>
+      <circuit_breaker>Hystrix or Resilience4j</circuit_breaker>
+    </scaling>
+    <ci_cd>
+      <pipeline>GitLab CI or GitHub Actions</pipeline>
+      <testing>Unit, Integration, E2E, Security scanning</testing>
+      <deployment>Blue-green or Canary deployments</deployment>
+    </ci_cd>
+  </deployment>
+</architecture_plan>

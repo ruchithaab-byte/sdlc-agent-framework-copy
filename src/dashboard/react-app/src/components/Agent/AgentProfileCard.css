@@ -1,0 +1,110 @@
+.agent-profile-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.agent-profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-title-space {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-icon {
+  font-size: 18px;
+}
+
+.agent-name {
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 15px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.budget-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.budget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.budget-label {
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 500;
+}
+
+.budget-amount {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cost-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+.capabilities-section {
+  margin-bottom: 8px;
+}
+
+.capability-tag {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 400;
+}
+
+.extra-tools-section {
+  margin-top: 8px;
+}
+
+/* Dark theme adjustments */
+:global(.dark) .agent-profile-card {
+  background: var(--card-bg, #1e293b);
+  border-color: var(--border-color, #334155);
+}
+
+:global(.dark) .agent-profile-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .agent-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .budget-section {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+:global(.dark) .budget-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+:global(.dark) .budget-header span:first-child {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+:global(.dark) .budget-amount {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.dark) .cost-details {
+  color: rgba(255, 255, 255, 0.55);
+}
+
